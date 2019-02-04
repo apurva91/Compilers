@@ -1,7 +1,7 @@
 f1 = open("Intermediate.txt").read().splitlines()
-f2 = open("Assembly.asm","w")
+f2 = open("temp.asm","w")
 
-temp_regs = { "t0":"A","t1":"B","t2":"C","t3":"D","t4":"E","t5":"F","t6":"G","t7":"H"}
+temp_regs = { "t0":"A","t1":"B","t2":"C","t3":"D","t4":"E","t5":"H","t6":"L"}
 
 line_ptr = 0
 
@@ -51,28 +51,28 @@ def handle_conditions():
 			if(f1[line_ptr].split()[2] == "t0"):
 				gen_out("STA "+f1[line_ptr].split()[0])
 			else:
-				gen_out("PUSH A\nMOV A " + temp_regs[f1[line_ptr].split()[2]] + "\nSTA "+ f1[line_ptr].split()[0] +"\nPOP A")
+				gen_out("PUSH PSW\nMOV A, " + temp_regs[f1[line_ptr].split()[2]] + "\nSTA "+ f1[line_ptr].split()[0] +"\nPOP PSW")
 		else:
 			if len(f1[line_ptr].split())==3:
 				gen_out("MOV " + temp_regs[f1[line_ptr].split()[0]] + " " + temp_regs[f1[line_ptr].split()[2]])
 			else:
 				if f1[line_ptr].split()[3] == ">":
 					gen_out("CMP " + temp_regs[f1[line_ptr].split()[2]] + " " + temp_regs[f1[line_ptr].split()[4]])
-					gen_out("MVI " + temp_regs[f1[line_ptr].split()[0]] + " 1\nJNZ " +  get_new_compl_label()+ "\nMVI " + temp_regs[f1[line_ptr].split()[0]] + " 0\n" + get_compl_label() + ":")
+					gen_out("MVI " + temp_regs[f1[line_ptr].split()[0]] + ", 1\nJNZ " +  get_new_compl_label()+ "\nMVI " + temp_regs[f1[line_ptr].split()[0]] + ", 0\n" + get_compl_label() + ":")
 				elif f1[line_ptr].split()[3] == "<":
 					gen_out("CMP " + temp_regs[f1[line_ptr].split()[2]] + " " + temp_regs[f1[line_ptr].split()[4]])
-					gen_out("MVI " + temp_regs[f1[line_ptr].split()[0]] + " 1\nJC " +  get_new_compl_label()+ "\nMVI " + temp_regs[f1[line_ptr].split()[0]] + " 0\n" + get_compl_label() + ":")
+					gen_out("MVI " + temp_regs[f1[line_ptr].split()[0]] + ", 1\nJC " +  get_new_compl_label()+ "\nMVI " + temp_regs[f1[line_ptr].split()[0]] + ", 0\n" + get_compl_label() + ":")
 				elif f1[line_ptr].split()[3] == "==":
 					gen_out("CMP " + temp_regs[f1[line_ptr].split()[2]] + " " + temp_regs[f1[line_ptr].split()[4]])
-					gen_out("MVI " + temp_regs[f1[line_ptr].split()[0]] + " 1\nJZ " +  get_new_compl_label()+ "\nMVI " + temp_regs[f1[line_ptr].split()[0]] + " 0\n" + get_compl_label() + ":")
+					gen_out("MVI " + temp_regs[f1[line_ptr].split()[0]] + ", 1\nJZ " +  get_new_compl_label()+ "\nMVI " + temp_regs[f1[line_ptr].split()[0]] + ", 0\n" + get_compl_label() + ":")
 	elif "=" in f1[line_ptr]:
 		if not (f1[line_ptr].split()[2].startswith("_")):
-			gen_out("MVI "+  temp_regs[f1[line_ptr].split()[0]] +" " +f1[line_ptr].split()[2])
+			gen_out("MVI "+  temp_regs[f1[line_ptr].split()[0]] +", " +f1[line_ptr].split()[2])
 		else:
 			if(f1[line_ptr].split()[0] == "t0"):
 				gen_out("LDA "+f1[line_ptr].split()[2])
 			else:
-				gen_out("PUSH A\nLDA " + f1[line_ptr].split()[2] + "\nMOV "+ temp_regs[f1[line_ptr].split()[0]] +" A\nPOP A")
+				gen_out("PUSH PSW\nLDA " + f1[line_ptr].split()[2] + "\nMOV "+ temp_regs[f1[line_ptr].split()[0]] +", A\nPOP PSW")
 	line_ptr+=1	
 
 
@@ -112,48 +112,72 @@ def handle_statement():
 			if(f1[line_ptr].split()[2] == "t0"):
 				gen_out("STA "+f1[line_ptr].split()[0])
 			else:
-				gen_out("PUSH A\nMOV A " + temp_regs[f1[line_ptr].split()[2]] + "\nSTA "+ f1[line_ptr].split()[0] +"\nPOP A")
+				gen_out("PUSH PSW\nMOV A, " + temp_regs[f1[line_ptr].split()[2]] + "\nSTA "+ f1[line_ptr].split()[0] +"\nPOP PSW")
 		else:
-			gen_out("MOV " + temp_regs[f1[line_ptr].split()[0]] + " " + temp_regs[f1[line_ptr].split()[2]])
+			gen_out("MOV " + temp_regs[f1[line_ptr].split()[0]] + ", " + temp_regs[f1[line_ptr].split()[2]])
 
 	elif "+=" in f1[line_ptr]:
 		if f1[line_ptr].split()[0] == "t0":
 			gen_out("ADD " + temp_regs[f1[line_ptr].split()[2]])
 		else:
-			gen_out("PUSH A\nMOV A "+temp_regs[f1[line_ptr].split()[0]] + "\nADD " + temp_regs[f1[line_ptr].split()[2]] + "\nMOV "+ temp_regs[f1[line_ptr].split()[0]] +", A\nPOP A")
+			gen_out("PUSH PSW\nMOV A, "+temp_regs[f1[line_ptr].split()[0]] + "\nADD " + temp_regs[f1[line_ptr].split()[2]] + "\nMOV "+ temp_regs[f1[line_ptr].split()[0]] +", A\nPOP PSW")
 	
 	elif "*=" in f1[line_ptr]:
 		if f1[line_ptr].split()[0] == "t0":
-			gen_out("MUL " + temp_regs[f1[line_ptr].split()[2]])
+			b = temp_regs[f1[line_ptr].split()[0]]
+			c = temp_regs[f1[line_ptr].split()[2]]
+			gen_out("PUSH B")
+			gen_out("MOV C," + c)
+			gen_out("MOV B, A")
+			gen_out("MVI A, 0")
+			label = get_new_l_label()
+			gen_out(label + ":")
+			gen_out("ADD B" )
+			gen_out("DCR C")
+			gen_out("JNZ " + label)
+			gen_out("POP B")
 		else:
-			gen_out("PUSH A\nMOV A "+temp_regs[f1[line_ptr].split()[0]] + "\nMUL " + temp_regs[f1[line_ptr].split()[2]] + "\nMOV "+ temp_regs[f1[line_ptr].split()[0]] +", A\nPOP A")
+			b = temp_regs[f1[line_ptr].split()[0]]
+			c = temp_regs[f1[line_ptr].split()[2]]
+			gen_out("PUSH PSW")
+			gen_out("MOV A, " + c)
+			gen_out("PUSH PSW")			
+			gen_out("MVI A, 0")
+			label = get_new_l_label()
+			gen_out(label + ":")
+			gen_out("ADD " + b)
+			gen_out("DCR " + c)
+			gen_out("JNZ " + label)
+			gen_out("MOV " + b + ", A")
+			gen_out("POP PSW")
+			gen_out("MOV " + c +", A")
+			gen_out("POP PSW")
 	
 	elif "\=" in f1[line_ptr]:
 		if f1[line_ptr].split()[0] == "t0":
 			gen_out("DIV " + temp_regs[f1[line_ptr].split()[2]])
 		else:
-			gen_out("PUSH A\nMOV A "+temp_regs[f1[line_ptr].split()[0]] + "\nDIV " + temp_regs[f1[line_ptr].split()[2]] + "\nMOV "+ temp_regs[f1[line_ptr].split()[0]] +", A\nPOP A")
+			gen_out("PUSH PSW\nMOV A, "+temp_regs[f1[line_ptr].split()[0]] + "\nDIV " + temp_regs[f1[line_ptr].split()[2]] + "\nMOV "+ temp_regs[f1[line_ptr].split()[0]] +", A\nPOP PSW")
 
 	elif "-=" in f1[line_ptr]:
 		if f1[line_ptr].split()[0] == "t0":
 			gen_out("SUB " + temp_regs[f1[line_ptr].split()[2]])
 		else:
-			gen_out("PUSH A\nMOV A "+temp_regs[f1[line_ptr].split()[0]] + "\nSUB " + temp_regs[f1[line_ptr].split()[2]] + "\nMOV "+ temp_regs[f1[line_ptr].split()[0]] +", A\nPOP A")
+			gen_out("PUSH PSW\nMOV A, "+temp_regs[f1[line_ptr].split()[0]] + "\nSUB " + temp_regs[f1[line_ptr].split()[2]] + "\nMOV "+ temp_regs[f1[line_ptr].split()[0]] +", A\nPOP PSW")
 
 	elif "=" in f1[line_ptr]:
 		if not (f1[line_ptr].split()[2].startswith("_")):
-			gen_out("MVI " + temp_regs[f1[line_ptr].split()[0]] + " "+ f1[line_ptr].split()[2])
+			gen_out("MVI " + temp_regs[f1[line_ptr].split()[0]] + ", "+ f1[line_ptr].split()[2])
 		else:
 			if(f1[line_ptr].split()[0] == "t0"):
 				gen_out("LDA "+f1[line_ptr].split()[2])
 			else:
-				gen_out("PUSH A\nLDA " + f1[line_ptr].split()[2] + "\nMOV "+ temp_regs[f1[line_ptr].split()[0]] +" A\nPOP A")
+				gen_out("PUSH PSW\nLDA " + f1[line_ptr].split()[2] + "\nMOV "+ temp_regs[f1[line_ptr].split()[0]] +", A\nPOP PSW")
 
 	line_ptr+=1
 
-def read_next_line():
-	gen_out("ORG 0000h")
-	global line_ptr, stack
+def main():
+	global line_ptr, stack, f2
 	while(1):
 		if f1[line_ptr].startswith("if ("):
 			handle_if()
@@ -168,8 +192,20 @@ def read_next_line():
 			handle_statement()
 		if line_ptr==len(f1):
 			break
-	gen_out("END")
+	gen_out("HLT")
 	f2.close()
+	f2 = open("temp.asm","r").read().split()
+	variables = list(set([x for x in f2 if x.startswith("_")]))
+	mapping = {}
+	for idx, x in enumerate(variables):
+		mapping[x] = str(1000 + idx) + "H"
+	f2 = open("temp.asm","r").read()
+	for x in variables:
+		f2 = f2.replace(x , mapping[x])
+	f2 = f2.replace(":\n" , ": ")
+	f3 = open("Assembly.asm","w")
+	f3.write(f2)
+	f3.close()
 
 
 
@@ -179,4 +215,4 @@ def read_next_line():
 
 	# else:
 
-read_next_line()
+main()
