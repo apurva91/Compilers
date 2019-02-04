@@ -1,5 +1,5 @@
 f1 = open("Intermediate.txt").read().splitlines()
-f2 = open("Assembly","w")
+f2 = open("Assembly.asm","w")
 
 temp_regs = { "t0":"A","t1":"B","t2":"C","t3":"D","t4":"E","t5":"F","t6":"G","t7":"H"}
 
