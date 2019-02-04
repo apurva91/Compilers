@@ -153,11 +153,44 @@ def handle_statement():
 			gen_out("MOV " + c +", A")
 			gen_out("POP PSW")
 	
-	elif "\=" in f1[line_ptr]:
+	elif "/=" in f1[line_ptr]:
 		if f1[line_ptr].split()[0] == "t0":
-			gen_out("DIV " + temp_regs[f1[line_ptr].split()[2]])
+			b = temp_regs[f1[line_ptr].split()[0]]
+			c = temp_regs[f1[line_ptr].split()[2]]
+			gen_out("PUSH B")
+			gen_out("MOV B," + c)
+			gen_out("MOV A," + b)
+			gen_out("MVI C, 0")
+			label = get_new_l_label()
+			gen_out(label + ":")
+			gen_out("SUB B" )
+			gen_out("INR C")
+			gen_out("CMP B")
+			gen_out("JC " + label)
+			gen_out("MOV A, C")
+			gen_out("POP B")
+
 		else:
-			gen_out("PUSH PSW\nMOV A, "+temp_regs[f1[line_ptr].split()[0]] + "\nDIV " + temp_regs[f1[line_ptr].split()[2]] + "\nMOV "+ temp_regs[f1[line_ptr].split()[0]] +", A\nPOP PSW")
+			b = temp_regs[f1[line_ptr].split()[0]]
+			c = temp_regs[f1[line_ptr].split()[2]]
+			gen_out("PUSH PSW")
+			gen_out("PUSH B")
+			gen_out("MOV B," + c)
+			gen_out("MOV A," + b)
+			gen_out("MVI C, 0")
+			label = get_new_l_label()
+			gen_out(label + ":")
+			gen_out("SUB B" )
+			gen_out("INR C")
+			gen_out("CMP B")
+			gen_out("JC " + label)
+			gen_out("MOV A, C")
+			gen_out("POP B")
+			gen_out("MOV " + b + ", A")
+			gen_out("POP PSW")
+
+
+
 
 	elif "-=" in f1[line_ptr]:
 		if f1[line_ptr].split()[0] == "t0":
