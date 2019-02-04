@@ -25,7 +25,6 @@ def gen_out(com):
 
 def handle_conditions():
 	global line_ptr
-
 	if "<-" in f1[line_ptr]:
 		if(f1[line_ptr].split()[0].startswith("_")):
 			if(f1[line_ptr].split()[2] == "t0"):
@@ -53,7 +52,6 @@ def handle_conditions():
 				gen_out("LDA "+f1[line_ptr].split()[2])
 			else:
 				gen_out("PUSH A\nLDA " + f1[line_ptr].split()[2] + "\nMOV "+ temp_regs[f1[line_ptr].split()[0]] +" A\nPOP A")
-
 	line_ptr+=1	
 
 
@@ -123,6 +121,8 @@ def read_next_line():
 	while(1):
 		if f1[line_ptr].startswith("if ("):
 			handle_if()
+		elif f1[line_ptr].startswith("} END") or f1[line_ptr].startswith("BEGIN{"):
+			line_ptr+=1
 		elif f1[line_ptr].startswith("}"):
 			gen_out(stack.pop())
 			line_ptr+=1
@@ -135,12 +135,9 @@ def read_next_line():
 
 	# elif f1[line_ptr].startswith("while ("):
 
-		# elif f1[line_ptr].startswith("} END"):
-
 
 	# elif f1[line_ptr].startswith("do ("):
 
-	# elif f1[line_ptr].startswith("BEGIN{"):
 
 
 	# else:
