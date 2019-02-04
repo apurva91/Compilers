@@ -12,7 +12,7 @@ char  *newname()
     return( *Namep++ );   
 }   
    
-freename(s)   
+void freename(s)   
 char    *s;   
 {   
     if( Namep > Names )   
