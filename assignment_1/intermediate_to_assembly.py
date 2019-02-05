@@ -30,6 +30,16 @@ def get_ie_label():
 	global ie_label_num
 	return "IFTHEN" + str(ie_label_num)
 
+p_label_num = -1
+def get_new_p_label():
+	global p_label_num
+	p_label_num+=1
+	return "POPPED" + str(p_label_num)
+
+def get_p_label():
+	global p_label_num
+	return "POPPED" + str(p_label_num)
+
 l_label_num = -1
 def get_new_l_label():
 	global l_label_num
@@ -54,17 +64,17 @@ def handle_conditions():
 				gen_out("PUSH PSW\nMOV A, " + temp_regs[f1[line_ptr].split()[2]] + "\nSTA "+ f1[line_ptr].split()[0] +"\nPOP PSW")
 		else:
 			if len(f1[line_ptr].split())==3:
-				gen_out("MOV " + temp_regs[f1[line_ptr].split()[0]] + " " + temp_regs[f1[line_ptr].split()[2]])
+				gen_out("MOV " + temp_regs[f1[line_ptr].split()[0]] + ", " + temp_regs[f1[line_ptr].split()[2]])
 			else:
 				if f1[line_ptr].split()[3] == ">":
-					gen_out("CMP " + temp_regs[f1[line_ptr].split()[2]] + " " + temp_regs[f1[line_ptr].split()[4]])
-					gen_out("MVI " + temp_regs[f1[line_ptr].split()[0]] + ", 1\nJNZ " +  get_new_compl_label()+ "\nMVI " + temp_regs[f1[line_ptr].split()[0]] + ", 0\n" + get_compl_label() + ":")
+					gen_out("MOV L, " + temp_regs[f1[line_ptr].split()[2]] + "\nMOV H, " + temp_regs[f1[line_ptr].split()[4]])
+					gen_out("PUSH H \nPUSH PSW \nMOV A, H \nCMP L \nMVI A, 1 \nJNC "+ get_new_compl_label() +" \nMVI A, 0\n" + get_compl_label() + ":")
 				elif f1[line_ptr].split()[3] == "<":
-					gen_out("CMP " + temp_regs[f1[line_ptr].split()[2]] + " " + temp_regs[f1[line_ptr].split()[4]])
-					gen_out("MVI " + temp_regs[f1[line_ptr].split()[0]] + ", 1\nJC " +  get_new_compl_label()+ "\nMVI " + temp_regs[f1[line_ptr].split()[0]] + ", 0\n" + get_compl_label() + ":")
+					gen_out("MOV H, " + temp_regs[f1[line_ptr].split()[2]] + "\nMOV L, " + temp_regs[f1[line_ptr].split()[4]])
+					gen_out("PUSH H \nPUSH PSW \nMOV A, H \nCMP L \nMVI A, 1 \nJNC "+ get_new_compl_label() +" \nMVI A, 0\n" + get_compl_label() + ":")
 				elif f1[line_ptr].split()[3] == "==":
-					gen_out("CMP " + temp_regs[f1[line_ptr].split()[2]] + " " + temp_regs[f1[line_ptr].split()[4]])
-					gen_out("MVI " + temp_regs[f1[line_ptr].split()[0]] + ", 1\nJZ " +  get_new_compl_label()+ "\nMVI " + temp_regs[f1[line_ptr].split()[0]] + ", 0\n" + get_compl_label() + ":")
+					gen_out("MOV H, " + temp_regs[f1[line_ptr].split()[2]] + "\nMOV L, " + temp_regs[f1[line_ptr].split()[4]])
+					gen_out("PUSH H \nPUSH PSW \nMOV A, H \nCMP L \nMVI A, 0 \nJZ "+ get_new_compl_label() +" \nMVI A, 1\n" + get_compl_label() + ":")
 	elif "=" in f1[line_ptr]:
 		if not (f1[line_ptr].split()[2].startswith("_")):
 			gen_out("MVI "+  temp_regs[f1[line_ptr].split()[0]] +", " +f1[line_ptr].split()[2])
@@ -84,8 +94,8 @@ def handle_while():
 	gen_out(label1 + ":")
 	while(1):
 		if len(f1[line_ptr].split()) == 1:
-			gen_out("CMP " + temp_regs[f1[line_ptr][:-1]] + " 0\nJZ " + label2)
-			stack.append("JMP " + label1 +"\n" + label2 + ":")
+			gen_out("MVI H, 0\nCMP H\nJNZ " + label2 + "\nPOP PSW \nPOP H")
+			stack.append("JMP " + label1 + "\n" + label2 + ":\nPOP PSW\nPOP H\n" + get_p_label() + ":")
 			line_ptr+=1
 			break
 		else:
@@ -97,8 +107,8 @@ def handle_if():
 	line_ptr+=1
 	while(1):
 		if len(f1[line_ptr].split()) == 1:
-			gen_out("CMP " + temp_regs[f1[line_ptr][:-1]] + " 0\nJZ " + get_new_ie_label())
-			stack.append(get_ie_label() + ":")
+			gen_out("MVI H, 0\nCMP H\nJNZ " + get_new_ie_label() + "\nPOP PSW \nPOP H")
+			stack.append("JMP " + get_new_p_label() + "\n" + get_ie_label() + ":\nPOP PSW\nPOP H\n" + get_p_label() + ":")
 			line_ptr+=1
 			break
 		else:
