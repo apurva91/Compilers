@@ -7,15 +7,19 @@ Im Awesome
  */
 
 //*awesomeeeeee
-//
+// "Hello"
 //
 //
 //
 
 /*
-asda
+// asda
  */
 
+printf("asd\nasd \
+	asdasdasdaas//hello/*da");
+
+/* hi there */
 return 0;
 }
 

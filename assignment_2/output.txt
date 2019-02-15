@@ -1,7 +1,31 @@
-1) Source code statements : 8
+
+# define a 2 # define b 5
+
+int main(){
+ 
+
+ 
+ 
+ 
+ 
+ 
+
+ 
+
+printf("asdasd \
+	asdasdasdaas//hello/*da");
+
+ 
+return 0;
+}
+
+
+
+
+1) Source code statements : 25
 2) Comments               : 8
-3) Blank Lines            : 5
-4) Macro Definitions      : 8
-5) Variable Declarations  : 8
-6) Function Declarations  : 8
-7) Function Definitions   : 8
+3) Blank Lines            : 8
+4) Macro Definitions      : 25
+5) Variable Declarations  : 25
+6) Function Declarations  : 25
+7) Function Definitions   : 25
