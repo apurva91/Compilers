@@ -12,14 +12,16 @@ lines = f.splitlines()
 num_of_lines = len(lines)
 num_of_blank_lines = 0
 num_of_comments = 0
+num_of_macro_definitions = 0
+num_of_var_declaration = 0
 
 # Counting the number of blank lines
 
 for x in lines:
     if x == "" :
         num_of_blank_lines += 1
-    
-if f.endswith("\n"): 
+
+if f.endswith("\n"):
     num_of_blank_lines += 1
 
 
@@ -53,7 +55,16 @@ f = re.sub(re.compile(r'\'.\'',re.DOTALL|re.MULTILINE),"\' \'",f)
 
 # Removing the removed code from here.
 lines = [x.strip() for x in f.splitlines() if len(x.strip())>0]
+
 f = "\n".join(lines)
+
+pattern  = re.compile(r'\b(?:(?:auto\s*|const\s*|unsigned\s*|extern\s*|signed\s*|register\s*|volatile\s*|static\s*|void\s*|short\s*|long\s*|char\s*|int\s*|float\s*|double\s*|_Bool\s*|complex\s*)+)(?:\s+\*?\*?\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*[\[;,=)]')
+for x in lines:
+    if re.match(r'^#define',x) or re.match(r'^# define',x) :
+        num_of_macro_definitions += 1
+	if re.match(pattern,x):
+		num_of_var_declaration += 1
+
 
 
 # Generating the output
@@ -63,7 +74,7 @@ out_file.write("\n\n\n\n")
 out_file.write("1) Source code statements : " + str(num_of_lines) + "\n")
 out_file.write("2) Comments               : " + str(num_of_comments) + "\n")
 out_file.write("3) Blank Lines            : " + str(num_of_blank_lines) + "\n")
-out_file.write("4) Macro Definitions      : " + str(num_of_lines) + "\n")
+out_file.write("4) Macro Definitions      : " + str(num_of_macro_definitions) + "\n")
 out_file.write("5) Variable Declarations  : " + str(num_of_lines) + "\n")
 out_file.write("6) Function Declarations  : " + str(num_of_lines) + "\n")
 out_file.write("7) Function Definitions   : " + str(num_of_lines) + "\n")
@@ -71,7 +82,6 @@ out_file.close()
 
 
 '''
-
 Notes on comments [Source Stackoverflow]:
 
 Strings needs to be included, because comment-markers inside them does not start a comment.
@@ -81,5 +91,4 @@ Edit: re.sub didn't take any flags, so had to compile the pattern first.
 Edit2: Added character literals, since they could contain quotes that would otherwise be recognized as string delimiters.
 
 Edit3: Fixed the case where a legal expression int/**/x=5; would become intx=5; which would not compile, by replacing the comment with a space rather then an empty string.
-
 '''
