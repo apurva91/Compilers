@@ -2,7 +2,8 @@
 # define a 2
 # define b 5
 int main(){
-char a = ' '){
+char a = ' ';
+if(a==' '){
 printf(" ");
 }
 return 0;

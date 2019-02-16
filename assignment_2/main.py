@@ -48,7 +48,8 @@ f , num_of_comments = comment_remover(f)
 
 # Removing the strings as they could contain text which will interrupt
 f = re.sub(re.compile(r'\".*\"',re.DOTALL|re.MULTILINE),"\" \"",f)
-f = re.sub(re.compile(r'\'.*\'',re.DOTALL|re.MULTILINE),"\' \'",f)
+
+f = re.sub(re.compile(r'\'.\'',re.DOTALL|re.MULTILINE),"\' \'",f)
 
 # Removing the removed code from here.
 lines = [x.strip() for x in f.splitlines() if len(x.strip())>0]
