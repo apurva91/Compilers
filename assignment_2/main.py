@@ -14,6 +14,7 @@ num_of_blank_lines = 0
 num_of_comments = 0
 num_of_macro_definitions = 0
 num_of_var_declaration = 0
+num_of_func_declaration = 0
 
 # Counting the number of blank lines
 
@@ -58,12 +59,19 @@ lines = [x.strip() for x in f.splitlines() if len(x.strip())>0]
 
 f = "\n".join(lines)
 
+#regex for VARIABLE DECLARATION
 pattern  = re.compile(r'\b(?:(?:auto\s*|const\s*|unsigned\s*|extern\s*|signed\s*|register\s*|volatile\s*|static\s*|void\s*|short\s*|long\s*|char\s*|int\s*|float\s*|double\s*|_Bool\s*|complex\s*)+)(?:\s+\*?\*?\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*[\[;,=)]')
+
+#regex for FUNCTION DECLARATION
+func_pattern_dec = re.compile(r'^\s*(?:(?:inline|static)\s+){0,2}(?!else|typedef|return)\w+\s+\*?\s*(\w+)\s*\([^0]+\)\s*;?')
+
 for x in lines:
-    if re.match(r'^#define',x) or re.match(r'^# define',x) :
-        num_of_macro_definitions += 1
-	if re.match(pattern,x):
+	if re.match(r'^#define',x) or re.match(r'^# define',x):
+		num_of_macro_definitions += 1
+	if (re.match(pattern,x)):
 		num_of_var_declaration += 1
+	if(re.match(func_pattern_dec,x)):
+		num_of_func_declaration += 1
 
 
 
@@ -75,8 +83,8 @@ out_file.write("1) Source code statements : " + str(num_of_lines) + "\n")
 out_file.write("2) Comments               : " + str(num_of_comments) + "\n")
 out_file.write("3) Blank Lines            : " + str(num_of_blank_lines) + "\n")
 out_file.write("4) Macro Definitions      : " + str(num_of_macro_definitions) + "\n")
-out_file.write("5) Variable Declarations  : " + str(num_of_lines) + "\n")
-out_file.write("6) Function Declarations  : " + str(num_of_lines) + "\n")
+out_file.write("5) Variable Declarations  : " + str(num_of_var_declaration) + "\n")
+out_file.write("6) Function Declarations  : " + str(num_of_func_declaration) + "\n")
 out_file.write("7) Function Definitions   : " + str(num_of_lines) + "\n")
 out_file.close()
 

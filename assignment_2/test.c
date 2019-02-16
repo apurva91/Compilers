@@ -10,6 +10,9 @@
 extern char *yytext; /* in lex.c */
 extern int yyleng;
 extern yylineno;
+
+static int * printarray(int *first); //Function declaration
+char *avoidfunction(char *alpha);
 int main()
 {
 /* statement_block */
