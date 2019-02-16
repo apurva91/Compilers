@@ -1,31 +1,19 @@
-
-# define a 2 # define b 5
-
+#include <stdio.h>
+# define a 2
+# define b 5
 int main(){
- 
-
- 
- 
- 
- 
- 
-
- 
-
-printf("asdasd \
-	asdasdasdaas//hello/*da");
-
- 
+char a = ' '){
+printf(" ");
+}
 return 0;
 }
 
 
 
-
-1) Source code statements : 25
-2) Comments               : 8
-3) Blank Lines            : 8
-4) Macro Definitions      : 25
-5) Variable Declarations  : 25
-6) Function Declarations  : 25
-7) Function Definitions   : 25
+1) Source code statements : 29
+2) Comments               : 9
+3) Blank Lines            : 6
+4) Macro Definitions      : 29
+5) Variable Declarations  : 29
+6) Function Declarations  : 29
+7) Function Definitions   : 29

@@ -4,24 +4,30 @@ if len(sys.argv) != 3:
 	print("Usage: python main.py <input_filename> <output_filename>", file=sys.stderr)
 	exit()
 
+out_file = open(sys.argv[2],'w')
+
 f = open(sys.argv[1]).read()
+
 lines = f.splitlines()
 num_of_lines = len(lines)
 num_of_blank_lines = 0
 num_of_comments = 0
 
-for x in lines:
-	if x == "" :
-		num_of_blank_lines += 1
-	
-if f.endswith("\n"): 
-	num_of_blank_lines += 1
+# Counting the number of blank lines
 
-out_file = open(sys.argv[2],'w')
+for x in lines:
+    if x == "" :
+        num_of_blank_lines += 1
+    
+if f.endswith("\n"): 
+    num_of_blank_lines += 1
+
+
+# Replcaing existing \n from the code and replcing them with ' ' because newline is also interpretted as \n in python
 
 lines = [ x.replace("\\n","") for x in lines ]
-
 f = "\n".join(lines)
+f = f.replace("\\\n"," ")
 
 def comment_remover(text):
     def replacer(match):
@@ -38,6 +44,18 @@ def comment_remover(text):
 
 f , num_of_comments = comment_remover(f)
 
+# Removed the comments from the existing file and stripped the whitespaces in the new file.
+
+# Removing the strings as they could contain text which will interrupt
+f = re.sub(re.compile(r'\".*\"',re.DOTALL|re.MULTILINE),"\" \"",f)
+f = re.sub(re.compile(r'\'.*\'',re.DOTALL|re.MULTILINE),"\' \'",f)
+
+# Removing the removed code from here.
+lines = [x.strip() for x in f.splitlines() if len(x.strip())>0]
+f = "\n".join(lines)
+
+
+# Generating the output
 
 out_file.write(f)
 out_file.write("\n\n\n\n")

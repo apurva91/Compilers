@@ -1,5 +1,6 @@
-
-# define a 2 # define b 5
+#include <stdio.h>
+# define a 2 
+/* Hello */ # define b 5
 
 int main(){
 /*
@@ -15,11 +16,14 @@ Im Awesome
 /*
 // asda
  */
-
-printf("asd\nasd \
-	asdasdasdaas//hello/*da");
+	char a = 'a';
+	if(a=='a'){
+		printf("asd\nasd \
+			asdasdasd\"a;as//hello/*da");
+		
+	}
 
 /* hi there */
-return 0;
+	return 0;
 }
 
