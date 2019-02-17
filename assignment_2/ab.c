@@ -9,9 +9,16 @@
 extern char *yytext;
 extern int yyleng;
 extern yylineno;
+
 static int * printarray(int *first);
 char *avoidfunction(char *alpha);
-int main()
+void same(int b);
+
+void same(int b){
+  print(b);
+}
+
+int main(int x)
 {
 return 0;
 }

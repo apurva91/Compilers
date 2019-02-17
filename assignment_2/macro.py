@@ -13,10 +13,13 @@ pattern  = re.compile(r'\b(?:(?:auto\s*|const\s*|unsigned\s*|extern\s*|signed\s*
 func_pattern = re.compile(r'^\s*(?:(?:inline|static)\s+){0,2}(?!else|typedef|return)\w+\s+\*?\s*(\w+)\s*\([^0]+\)\s*;?')
 fundec = 0
 
-func2= 'int main(){return 0;}'
+func2= 'void same(int b);'
 
-if(re.match(func_pattern,func2)):
-    print("LFG!!!!!")
+func_definition_pattern = re.compile(r'^([\w\*]+( )*?){2,}\(([^!@#$+%^;]+?)\)(?!\s*;)')
+
+
+if(re.match(func_definition_pattern,func2)):
+    print("Function Definition")
 
 
 
@@ -28,14 +31,12 @@ for x in lines:
     if re.match(pattern,x):
         #print(x)
         vardec += 1
-    if re.match(func_pattern,x):
+    if re.match(func_definition_pattern,x):
         print(x)
         fundec += 1
 
-f = "\n".join(lines)
 
-if re.match(func_pattern,f):
-    print('Found a function declaration')
+
 
 print(macroline)
 print(vardec)

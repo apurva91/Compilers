@@ -15,7 +15,7 @@ num_of_comments = 0
 num_of_macro_definitions = 0
 num_of_var_declaration = 0
 num_of_func_declaration = 0
-
+num_of_func_definition = 0
 # Counting the number of blank lines
 
 for x in lines:
@@ -65,19 +65,29 @@ pattern  = re.compile(r'\b(?:(?:auto\s*|const\s*|unsigned\s*|extern\s*|signed\s*
 #regex for FUNCTION DECLARATION
 func_pattern_dec = re.compile(r'^\s*(?:(?:inline|static)\s+){0,2}(?!else|typedef|return)\w+\s+\*?\s*(\w+)\s*\([^0]+\)\s*;?')
 
+#regex for FUNCTION DEFINITION
+func_pattern_def = re.compile(r'^([\w\*]+( )*?){2,}\(([^!@#$+%^;]+?)\)(?!\s*;)')
+
+
+
 for x in lines:
 	if re.match(r'^#define',x) or re.match(r'^# define',x):
 		num_of_macro_definitions += 1
 	if (re.match(pattern,x)):
 		num_of_var_declaration += 1
 	if(re.match(func_pattern_dec,x)):
+		#print(x)
 		num_of_func_declaration += 1
+	if(re.match(func_pattern_def,x)):
+		#print(x)
+		num_of_func_definition += 1
 
+num_of_func_declaration = num_of_func_declaration-num_of_func_definition #func declaration regex catches definitions also (to fix bug)
 
 
 # Generating the output
 
-out_file.write(f)
+#out_file.write(f)
 out_file.write("\n\n\n\n")
 out_file.write("1) Source code statements : " + str(num_of_lines) + "\n")
 out_file.write("2) Comments               : " + str(num_of_comments) + "\n")
@@ -85,7 +95,7 @@ out_file.write("3) Blank Lines            : " + str(num_of_blank_lines) + "\n")
 out_file.write("4) Macro Definitions      : " + str(num_of_macro_definitions) + "\n")
 out_file.write("5) Variable Declarations  : " + str(num_of_var_declaration) + "\n")
 out_file.write("6) Function Declarations  : " + str(num_of_func_declaration) + "\n")
-out_file.write("7) Function Definitions   : " + str(num_of_lines) + "\n")
+out_file.write("7) Function Definitions   : " + str(num_of_func_definition) + "\n")
 out_file.close()
 
 

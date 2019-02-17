@@ -1,20 +1,11 @@
-#include <stdio.h>
-# define a 2
-# define b 5
-int main(){
-char a = ' ';
-if(a==' '){
-printf(" ");
-}
-return 0;
-}
 
 
 
-1) Source code statements : 29
-2) Comments               : 9
+
+1) Source code statements : 25
+2) Comments               : 10
 3) Blank Lines            : 6
-4) Macro Definitions      : 29
-5) Variable Declarations  : 29
-6) Function Declarations  : 29
-7) Function Definitions   : 29
+4) Macro Definitions      : 7
+5) Variable Declarations  : 2
+6) Function Declarations  : 2
+7) Function Definitions   : 1
