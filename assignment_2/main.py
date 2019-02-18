@@ -17,7 +17,7 @@ def get_line_num(f, index):
     return 0
 
 out_file = open(sys.argv[2],'w')
-
+keyword = ['else','goto','return','typedef']
 f = open(sys.argv[1]).read()
 
 lines = f.splitlines()
@@ -31,7 +31,7 @@ num_of_func_definition = 0
 # Counting the number of blank lines
 
 for x in lines:
-    if x == "" :
+    if x.strip() == "" :
         num_of_blank_lines += 1
 
 if f.endswith("\n"):
@@ -86,9 +86,8 @@ f = "\n".join(lines)
 wtf("test_comment_string.c",f)
 
 #regex for VARIABLE DECLARATION
-pattern  = re.compile(r'\b(?:(?:auto\s*|const\s*|unsigned\s*|extern\s*|signed\s*|register\s*|volatile\s*|static\s*|void\s*|short\s*|long\s*|char\s*|int\s*|float\s*|double\s*|_Bool\s*|complex\s*)+)(?:\s+\*?\*?\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*[\[;,=)]')
-
-
+# pattern  = re.compile(r'\b(?:(?:auto\s*|const\s*|unsigned\s*|extern\s*|signed\s*|register\s*|volatile\s*|static\s*|void\s*|short\s*|long\s*|char\s*|int\s*|float\s*|double\s*|_Bool\s*|complex\s*)+)(?:\s+\*?\*?\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*[\[;,=)]')
+pattern  = re.compile(r'((([a-zA-Z_][a-zA-Z_0-9]*( )*?){1,}))([\*\s]*)([a-zA-Z_][a-zA-Z0-9_]*)\s*[\[;,=)]',re.MULTILINE|re.DOTALL)
 
 for x in lines:
     if re.match(r'^#[\ \t]*define',x):
@@ -96,7 +95,14 @@ for x in lines:
 
 for x in lines:
     if (re.match(pattern,x)):
-        num_of_var_declaration += 1
+        bo = 0
+        for y in keyword:
+            if y in re.match(pattern,x).group().split(" "):
+                bo = 1
+        if bo == 0:
+            num_of_var_declaration += 1
+            print(re.match(pattern,x).group())
+
 
 #regex for FUNCTION DECLARATION
 # func_pattern_dec = re.compile(r'^\s*(?:(?:inline|static)\s+){0,2}(?!else|typedef|return)\w+\s+\*?\s*(\w+)\s*\([^0]+\)\s*;?')
@@ -107,14 +113,15 @@ for x in lines:
 
 #regex for FUNCTION DEFINITION
 # func_pattern_def = re.compile(r'([\w\*]+( )*?){2,}\([^!@#$+%^;]*?\)(?!\s*;)', re.MULTILINE|re.DOTALL)
-func_pattern_def = re.compile(r'(([\w\*]+( )*?){2,}\(([^!@#$+%^;]*?)\)(?!\s*;))', re.MULTILINE|re.DOTALL)
+func_pattern_def = re.compile(r'(([a-zA-Z_][a-zA-Z_0-9]*[\ \*]*?){2,}\(([^!@#$+%^;{}]*?)\)(?!\s*;))[\s]*{', re.MULTILINE|re.DOTALL)
 
 spans = [x.span() for x  in func_pattern_def.finditer(f)]
+spans.sort()
 spans.reverse()
+
 for x in spans:
-    # print(f[x[0]:x[1]])
     curl = 0
-    c_start = x[1]
+    c_start = x[0]
     start = -1
     while(1):
         if f[c_start] == '{':
@@ -126,9 +133,9 @@ for x in spans:
         c_start+=1
         if start!= -1 and curl == 0:
             break
-    f = f[0:x[1]] +"{" + '\n'*(len(f[start:c_start].split("\n"))-1) +  "}" + f[c_start:]
+    f = f[0:x[1]] + '\n'*(len(f[start:c_start].split("\n"))-1) +  "}" + f[c_start:]
 
-func_pattern_def = re.compile(r'(([\w\*]+( )*?){2,}\(([^!@#$+%^;\{\}]*?)\)(?!\s*;))', re.MULTILINE|re.DOTALL)
+func_pattern_def = re.compile(r'(([a-zA-Z_][a-zA-Z_0-9]*[\ \*]*?){2,}\(([^!@#$+%^;\{\}]*?)\)(?!\s*;))', re.MULTILINE|re.DOTALL)
 lol = []
 for x in func_pattern_def.finditer(f):
     for y in range(get_line_num(f,x.start()),get_line_num(f,x.end())+1):
@@ -136,15 +143,14 @@ for x in func_pattern_def.finditer(f):
 
 num_of_func_definition = len(set(lol))
 
-func_pattern_dec = re.compile(r'(([\w\*]+( )*?){2,}\(([^!@#$+%^;\{\}]*?)\)\s*?;)', re.MULTILINE| re.DOTALL)
+func_pattern_dec = re.compile(r'(([a-zA-Z_][a-zA-Z_0-9]*[\ \*]*?){2,}\(([^!@#$+%^;\{\}]*?)\)\s*?;)', re.MULTILINE| re.DOTALL)
 lol = []
 for x in func_pattern_dec.finditer(f):
-    print(f[x.start():x.end()])
     for y in range(get_line_num(f,x.start()),get_line_num(f,x.end())+1):
         lol.append(y)
 
 num_of_func_declaration = len(set(lol))
-print(set(lol))
+# print(set(lol))
 
 # Generating the output
 

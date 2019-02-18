@@ -41,3 +41,23 @@ for x in lines:
 print(macroline)
 print(vardec)
 print(fundec)
+
+
+# brac = 0
+# nl = 0
+# _start = -1
+# _end = -1
+# for idx,x in enumerate(f):
+#     if x == '(':
+#         if _start == -1:
+#             _start = idx
+#         brac += 1
+#     if brac > 0 and x == '\n':
+#         nl += 1
+#     if x == ')':
+#         brac -= 1
+#     if brac==0:
+#         if _start != -1:
+#             print(f[_start:idx])
+#             _start
+
