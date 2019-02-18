@@ -24,6 +24,7 @@ for x in lines:
 
 if f.endswith("\n"):
     num_of_blank_lines += 1
+    num_of_lines += 1
 
 
 # Replcaing existing \n from the code and replcing them with ' ' because newline is also interpretted as \n in python
@@ -35,30 +36,39 @@ f = f.replace("\\\n"," ")
 def comment_remover(text):
     def replacer(match):
         s = match.group(0)
-        if s.startswith('/'):
+        if s.startswith('/*'):
+            return "\n"
+        elif s.startswith('/'):
             return " "
         else:
             return s
     pattern = re.compile(
-        r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
+        r'\/\/.*?$|\/\*.*?\*\/|\'(?:\\.|[^\\\'])*\'|\"(?:\\.|[^\\\"])*\"',
         re.DOTALL | re.MULTILINE
     )
-    return re.sub(pattern, replacer, text), len([ x for x in re.findall(pattern,text) if x.startswith('/')])
+    z = re.findall(pattern,text)
+    count = sum([ len(x.split("\n")) for x in z if x.startswith('/')])
+    pattern2 = re.compile(
+        r'\*\/[^\n]*\/\/.*?$|\'(?:\\.|[^\\\'])*\'|\"(?:\\.|[^\\\"])*\"',
+         re.MULTILINE
+    )
+    z = re.findall(pattern2,text)
+    count2 = sum([ len(x.split("\n")) for x in z if x.startswith('*')])
+    return re.sub(pattern, replacer, text), count - count2
 
 f , num_of_comments = comment_remover(f)
-
 # Removed the comments from the existing file and stripped the whitespaces in the new file.
 
 # Removing the strings as they could contain text which will interrupt
-f = re.sub(re.compile(r'\".*\"',re.DOTALL|re.MULTILINE),"\" \"",f)
+f = re.sub(re.compile(r'\".*?\"',re.DOTALL|re.MULTILINE),"\" \"",f)
 
 f = re.sub(re.compile(r'\'.\'',re.DOTALL|re.MULTILINE),"\' \'",f)
 
 # Removing the removed code from here.
 lines = [x.strip() for x in f.splitlines() if len(x.strip())>0]
-
 f = "\n".join(lines)
 
+out_file.write(f)
 #regex for VARIABLE DECLARATION
 pattern  = re.compile(r'\b(?:(?:auto\s*|const\s*|unsigned\s*|extern\s*|signed\s*|register\s*|volatile\s*|static\s*|void\s*|short\s*|long\s*|char\s*|int\s*|float\s*|double\s*|_Bool\s*|complex\s*)+)(?:\s+\*?\*?\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*[\[;,=)]')
 
@@ -71,24 +81,22 @@ func_pattern_def = re.compile(r'^([\w\*]+( )*?){2,}\(([^!@#$+%^;]+?)\)(?!\s*;)')
 
 
 for x in lines:
-	if re.match(r'^#define',x) or re.match(r'^# define',x):
-		num_of_macro_definitions += 1
-	if (re.match(pattern,x)):
-		num_of_var_declaration += 1
-	if(re.match(func_pattern_dec,x)):
-		#print(x)
-		num_of_func_declaration += 1
-	if(re.match(func_pattern_def,x)):
-		#print(x)
-		num_of_func_definition += 1
+    if re.match(r'^#define',x) or re.match(r'^# define',x):
+        num_of_macro_definitions += 1
+    if (re.match(pattern,x)):
+        num_of_var_declaration += 1
+    if(re.match(func_pattern_dec,x)):
+        #print(x)
+        num_of_func_declaration += 1
+    if(re.match(func_pattern_def,x)):
+        #print(x)
+        num_of_func_definition += 1
 
 num_of_func_declaration = num_of_func_declaration-num_of_func_definition #func declaration regex catches definitions also (to fix bug)
-
 
 # Generating the output
 
 #out_file.write(f)
-out_file.write("\n\n\n\n")
 out_file.write("1) Source code statements : " + str(num_of_lines) + "\n")
 out_file.write("2) Comments               : " + str(num_of_comments) + "\n")
 out_file.write("3) Blank Lines            : " + str(num_of_blank_lines) + "\n")
