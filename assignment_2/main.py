@@ -81,7 +81,7 @@ func_pattern_def = re.compile(r'^([\w\*]+( )*?){2,}\(([^!@#$+%^;]+?)\)(?!\s*;)')
 
 
 for x in lines:
-    if re.match(r'^#define',x) or re.match(r'^# define',x):
+    if re.match(r'^#[\ \t]*define',x):
         num_of_macro_definitions += 1
     if (re.match(pattern,x)):
         num_of_var_declaration += 1

@@ -1,7 +1,7 @@
 #include <"bits/stdc++.h">
 
 #define EOI 0 /* End of input */
-# define SEMI 1 /* ; */
+# 	 define SEMI 1 /* ; */
 ///asdasdasdasd
 # define PLUS 2 /* +"" */ // asasdadasdads
 #define TIMES 3 /* * */
