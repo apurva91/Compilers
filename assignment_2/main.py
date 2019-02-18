@@ -85,9 +85,7 @@ f = "\n".join(lines)
 
 wtf("test_comment_string.c",f)
 
-#regex for VARIABLE DECLARATION
-# pattern  = re.compile(r'\b(?:(?:auto\s*|const\s*|unsigned\s*|extern\s*|signed\s*|register\s*|volatile\s*|static\s*|void\s*|short\s*|long\s*|char\s*|int\s*|float\s*|double\s*|_Bool\s*|complex\s*)+)(?:\s+\*?\*?\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*[\[;,=)]')
-pattern  = re.compile(r'((([a-zA-Z_][a-zA-Z_0-9]*( )*?){1,}))([\*\s]*)([a-zA-Z_][a-zA-Z0-9_]*)\s*[\[;,=)]',re.MULTILINE|re.DOTALL)
+pattern  = re.compile(r'((([a-zA-Z_][a-zA-Z_0-9]*( )+?){1,}))([\*\s]*)([a-zA-Z_][a-zA-Z0-9_]*)\s*[\[;,=)]',re.MULTILINE|re.DOTALL)
 
 for x in lines:
     if re.match(r'^#[\ \t]*define',x):
@@ -101,18 +99,8 @@ for x in lines:
                 bo = 1
         if bo == 0:
             num_of_var_declaration += 1
-            print(re.match(pattern,x).group())
+            # print(re.match(pattern,x).group())
 
-
-#regex for FUNCTION DECLARATION
-# func_pattern_dec = re.compile(r'^\s*(?:(?:inline|static)\s+){0,2}(?!else|typedef|return)\w+\s+\*?\s*(\w+)\s*\([^0]+\)\s*;?')
-# func_pattern_dec = re.compile(r'^([\w\*]+( )*?){2,}\(([^!@#$+%^;]*?)\)(\ )*;')
-# if(re.match(func_pattern_dec,x)):
-#     print(x)
-#     num_of_func_declaration += 1
-
-#regex for FUNCTION DEFINITION
-# func_pattern_def = re.compile(r'([\w\*]+( )*?){2,}\([^!@#$+%^;]*?\)(?!\s*;)', re.MULTILINE|re.DOTALL)
 func_pattern_def = re.compile(r'(([a-zA-Z_][a-zA-Z_0-9]*[\ \*]*?){2,}\(([^!@#$+%^;{}]*?)\)(?!\s*;))[\s]*{', re.MULTILINE|re.DOTALL)
 
 spans = [x.span() for x  in func_pattern_def.finditer(f)]
@@ -150,32 +138,13 @@ for x in func_pattern_dec.finditer(f):
         lol.append(y)
 
 num_of_func_declaration = len(set(lol))
-# print(set(lol))
 
 # Generating the output
-
-out_file.write(f)
-out_file.write("\n\n/*\n")
-
 out_file.write("1) Source code statements : " + str(num_of_lines) + "\n")
 out_file.write("2) Comments               : " + str(num_of_comments) + "\n")
 out_file.write("3) Blank Lines            : " + str(num_of_blank_lines) + "\n")
 out_file.write("4) Macro Definitions      : " + str(num_of_macro_definitions) + "\n")
 out_file.write("5) Variable Declarations  : " + str(num_of_var_declaration) + "\n")
 out_file.write("6) Function Declarations  : " + str(num_of_func_declaration) + "\n")
-out_file.write("7) Function Definitions   : " + str(num_of_func_definition) + "\n")
-out_file.write("*/")
+out_file.write("7) Function Definitions   : " + str(num_of_func_definition))
 out_file.close()
-
-
-'''
-Notes on comments [Source Stackoverflow]:
-
-Strings needs to be included, because comment-markers inside them does not start a comment.
-
-Edit: re.sub didn't take any flags, so had to compile the pattern first.
-
-Edit2: Added character literals, since they could contain quotes that would otherwise be recognized as string delimiters.
-
-Edit3: Fixed the case where a legal expression int/**/x=5; would become intx=5; which would not compile, by replacing the comment with a space rather then an empty string.
-'''

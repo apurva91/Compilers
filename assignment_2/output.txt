@@ -1,24 +1,7 @@
-#include<stdio.h>
-#include<stdlib.h>
-struct Node
-{
-int data;
-struct Node *next;
-};
-int main()
-{
-
-
-
-
-}
-
-/*
-1) Source code statements : 21
-2) Comments               : 2
-3) Blank Lines            : 5
-4) Macro Definitions      : 0
-5) Variable Declarations  : 5
+1) Source code statements : 19
+2) Comments               : 9
+3) Blank Lines            : 4
+4) Macro Definitions      : 7
+5) Variable Declarations  : 3
 6) Function Declarations  : 0
 7) Function Definitions   : 1
-*/
