@@ -1,4 +1,4 @@
-#include <"bits/stdc++.h">
+#include <stdio.h>
 
 #define EOI 0 /* End of input */
 # 	 define SEMI 1 /* ; */
@@ -15,9 +15,19 @@ extern int yyleng;
 /* hello
 asd */ int j = 5; // hello
 static int * printarray(int *first); //Function declaration
-char *avoidfunction(char *alpha);
+char *avoidfunction(char *alpha,
+	int a);
 
-int function(int b){return 5;} int semim(int c){return d;}
+int printe();
+
+int function(int b){return 5;} 
+ 
+int semim(int c, int d);
+
+
+int printer(int a,  int b){return 5;} statements(int a,int b){
+	return 5;
+}
 
 int same(int a ){
   return a;

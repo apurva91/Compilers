@@ -4,6 +4,18 @@ if len(sys.argv) != 3:
 	print("Usage: python main.py <input_filename> <output_filename>", file=sys.stderr)
 	exit()
 
+def wtf(name, text):
+    fi = open(name,'w');
+    fi.write(text)
+    fi.close()
+
+def get_line_num(f, index):
+    c = len(f.splitlines())
+    for x in range(0,c):
+        if len("\n".join(f.splitlines()[0:x+1])) >= index:
+            return x
+    return 0
+
 out_file = open(sys.argv[2],'w')
 
 f = open(sys.argv[1]).read()
@@ -59,6 +71,9 @@ def comment_remover(text):
 f , num_of_comments = comment_remover(f)
 # Removed the comments from the existing file and stripped the whitespaces in the new file.
 
+
+wtf("test_comment.c",f)
+
 # Removing the strings as they could contain text which will interrupt
 f = re.sub(re.compile(r'\".*?\"',re.DOTALL|re.MULTILINE),"\" \"",f)
 
@@ -68,35 +83,74 @@ f = re.sub(re.compile(r'\'.\'',re.DOTALL|re.MULTILINE),"\' \'",f)
 lines = [x.strip() for x in f.splitlines() if len(x.strip())>0]
 f = "\n".join(lines)
 
-out_file.write(f)
+wtf("test_comment_string.c",f)
+
 #regex for VARIABLE DECLARATION
 pattern  = re.compile(r'\b(?:(?:auto\s*|const\s*|unsigned\s*|extern\s*|signed\s*|register\s*|volatile\s*|static\s*|void\s*|short\s*|long\s*|char\s*|int\s*|float\s*|double\s*|_Bool\s*|complex\s*)+)(?:\s+\*?\*?\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*[\[;,=)]')
-
-#regex for FUNCTION DECLARATION
-func_pattern_dec = re.compile(r'^\s*(?:(?:inline|static)\s+){0,2}(?!else|typedef|return)\w+\s+\*?\s*(\w+)\s*\([^0]+\)\s*;?')
-
-#regex for FUNCTION DEFINITION
-func_pattern_def = re.compile(r'^([\w\*]+( )*?){2,}\(([^!@#$+%^;]+?)\)(?!\s*;)')
 
 
 
 for x in lines:
     if re.match(r'^#[\ \t]*define',x):
         num_of_macro_definitions += 1
+
+for x in lines:
     if (re.match(pattern,x)):
         num_of_var_declaration += 1
-    if(re.match(func_pattern_dec,x)):
-        #print(x)
-        num_of_func_declaration += 1
-    if(re.match(func_pattern_def,x)):
-        #print(x)
-        num_of_func_definition += 1
 
-num_of_func_declaration = num_of_func_declaration-num_of_func_definition #func declaration regex catches definitions also (to fix bug)
+#regex for FUNCTION DECLARATION
+# func_pattern_dec = re.compile(r'^\s*(?:(?:inline|static)\s+){0,2}(?!else|typedef|return)\w+\s+\*?\s*(\w+)\s*\([^0]+\)\s*;?')
+# func_pattern_dec = re.compile(r'^([\w\*]+( )*?){2,}\(([^!@#$+%^;]*?)\)(\ )*;')
+# if(re.match(func_pattern_dec,x)):
+#     print(x)
+#     num_of_func_declaration += 1
+
+#regex for FUNCTION DEFINITION
+# func_pattern_def = re.compile(r'([\w\*]+( )*?){2,}\([^!@#$+%^;]*?\)(?!\s*;)', re.MULTILINE|re.DOTALL)
+func_pattern_def = re.compile(r'(([\w\*]+( )*?){2,}\(([^!@#$+%^;]*?)\)(?!\s*;))', re.MULTILINE|re.DOTALL)
+
+spans = [x.span() for x  in func_pattern_def.finditer(f)]
+spans.reverse()
+for x in spans:
+    # print(f[x[0]:x[1]])
+    curl = 0
+    c_start = x[1]
+    start = -1
+    while(1):
+        if f[c_start] == '{':
+            if start == -1:
+                start = c_start 
+            curl += 1
+        elif f[c_start] == '}':
+            curl -= 1
+        c_start+=1
+        if start!= -1 and curl == 0:
+            break
+    f = f[0:x[1]] +"{" + '\n'*(len(f[start:c_start].split("\n"))-1) +  "}" + f[c_start:]
+
+func_pattern_def = re.compile(r'(([\w\*]+( )*?){2,}\(([^!@#$+%^;\{\}]*?)\)(?!\s*;))', re.MULTILINE|re.DOTALL)
+lol = []
+for x in func_pattern_def.finditer(f):
+    for y in range(get_line_num(f,x.start()),get_line_num(f,x.end())+1):
+        lol.append(y)
+
+num_of_func_definition = len(set(lol))
+
+func_pattern_dec = re.compile(r'(([\w\*]+( )*?){2,}\(([^!@#$+%^;\{\}]*?)\)\s*?;)', re.MULTILINE| re.DOTALL)
+lol = []
+for x in func_pattern_dec.finditer(f):
+    print(f[x.start():x.end()])
+    for y in range(get_line_num(f,x.start()),get_line_num(f,x.end())+1):
+        lol.append(y)
+
+num_of_func_declaration = len(set(lol))
+print(set(lol))
 
 # Generating the output
 
-#out_file.write(f)
+out_file.write(f)
+out_file.write("\n\n/*\n")
+
 out_file.write("1) Source code statements : " + str(num_of_lines) + "\n")
 out_file.write("2) Comments               : " + str(num_of_comments) + "\n")
 out_file.write("3) Blank Lines            : " + str(num_of_blank_lines) + "\n")
@@ -104,6 +158,7 @@ out_file.write("4) Macro Definitions      : " + str(num_of_macro_definitions) + 
 out_file.write("5) Variable Declarations  : " + str(num_of_var_declaration) + "\n")
 out_file.write("6) Function Declarations  : " + str(num_of_func_declaration) + "\n")
 out_file.write("7) Function Definitions   : " + str(num_of_func_definition) + "\n")
+out_file.write("*/")
 out_file.close()
 
 

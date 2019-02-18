@@ -14,26 +14,17 @@ static int * printarray(int *first);
 char *avoidfunction(char *alpha,
 int a);
 int printe();
-int function(int b){}
+int function(int b){return 5;}
 int semim(int c, int d);
-int printer(int a,  int b){} statements(int a,int b){
-
+int printer(int a,  int b){return 5;} statements(int a,int b){
+return 5;
 }
 int same(int a ){
-
+return a;
 }
-int main(){
-
-
-
+int main()
+{
+char c = ' ';
+printf(" ");
+return 0;
 }
-
-/*
-1) Source code statements : 44
-2) Comments               : 15
-3) Blank Lines            : 9
-4) Macro Definitions      : 7
-5) Variable Declarations  : 6
-6) Function Declarations  : 5
-7) Function Definitions   : 4
-*/
