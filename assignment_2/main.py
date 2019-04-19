@@ -85,7 +85,8 @@ f = "\n".join(lines)
 
 wtf("test_comment_string.c",f)
 
-pattern  = re.compile(r'((([a-zA-Z_][a-zA-Z_0-9]*( )+?){1,}))([\*\s]*)([a-zA-Z_][a-zA-Z0-9_]*)\s*[\[;,=)]',re.MULTILINE|re.DOTALL)
+# pattern  = re.compile(r'((([a-zA-Z_][a-zA-Z_0-9]*[\ \*]+?){1,}))([\*\s]*)([a-zA-Z_][a-zA-Z0-9_]*)\s*[\[;,=)]',re.MULTILINE|re.DOTALL)
+pattern  = re.compile(r'\b(?:(?:auto\s*|const\s*|unsigned\s*|extern\s*|signed\s*|register\s*|volatile\s*|static\s*|void\s*|short\s*|long\s*|char\s*|int\s*|float\s*|double\s*|_Bool\s*|complex\s*)+)(?:\s+\*?\*?\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*[\[;,=)]')
 
 for x in lines:
     if re.match(r'^#[\ \t]*define',x):

@@ -1,0 +1,3 @@
+int a;
+int b, c;
+float d, a[3,5];
