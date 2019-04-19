@@ -9,7 +9,8 @@
 	void yyerror(string s);
 
 	Node * root;
-
+	int level = 0;
+	SymbolTable symtab;
 %}
 
 %union{
