@@ -27,26 +27,56 @@
 
 %%
 
-start			:	dlist SEMI;
+start			:	statements 
+					{ $$ = new Node("start",""); $$->children.push_back($1); root = $$; };
+
+statements		:	statement
+					{ $$ = new Node("statements","");$$->children.push_back($1);} 
+					|
+					statement statements
+					{$$ = new Node("statements","");$$->children.push_back($1);$$->children.push_back($2);};
+statement		:	var_decl
+					{ $$ = new Node("statement","");$$->children.push_back($1);} 
+					|
+					expression SEMI
+					{ $$ = new Node("statement","");$$->children.push_back($1);$$->children.push_back($2);};
+var_decl		: 	dlist SEMI
+					{ $$ = new Node("var_decl",""); $$->children.push_back($1);};
 dlist			:	d
+					{ $$ = new Node("dlist",""); $$->children.push_back($1);}
 					|
-					dlist SEMI d {cout<<"+1"<<endl;};
-d				:	t l ;
-t				:	INT 
+					dlist SEMI d 
+					{ $$ = new Node("dlist","");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);};
+d				:	t l 
+					{ $$ = new Node("d","");$$->children.push_back($1);$$->children.push_back($2);};
+t				:	INT
+					{$$ = new Node("t",$1->value);$$->children.push_back($1);} 
 					|
-					FLOAT ;
-l				:	id_arr 
+					FLOAT 
+					{$$ = new Node("t",$1->value);$$->children.push_back($1);} ;
+l				:	id_arr
+					{ $$ = new Node("l",""); $$->children.push_back($1);}
 					|
 					id_arr COMMA l;
-id_arr			: 	IDENTIFIER 
+					{ $$ = new Node("l","");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);};
+id_arr			: 	IDENTIFIER
+					{ $$ = new Node("id_arr",""); $$->children.push_back($1);} 
 					|
-					IDENTIFIER LS dimlist RS;
-dimlist			:	num_id 
+					IDENTIFIER LS dimlist RS
+					{ $$ = new Node("id_arr",""); $$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);$$->children.push_back($4);};
+dimlist			:	num_id
+					{ $$ = new Node("dimlist",""); $$->children.push_back($1);} 
 					| 
-					num_id COMMA dimlist;
+					num_id COMMA dimlist
+					{ $$ = new Node("dimlist",""); $$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);};
 num_id			:	INTEGERS
+					{ $$ = new Node("num_id",$1->value); $$->children.push_back($1);} 
 					|
-					IDENTIFIER;
+					IDENTIFIER
+					{ $$ = new Node("dimlist",$1->value); $$->children.push_back($1);};
+					
+//expression		:						
+
 
 %%
 
