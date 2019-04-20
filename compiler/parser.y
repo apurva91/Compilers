@@ -16,6 +16,8 @@
 	Function * active_func_ptr = NULL;
 	vector <string> dimlist;
 	int error_count = 0;
+	stringstream ic;
+	int var_num = 0;
 %}
 
 %union{
@@ -152,6 +154,8 @@ expression		:	id_arr_asg EQUAL expression
 							if(symtab.search_var($1->value)){
 								Variable * ptr = symtab.search_var($1->value);
 								$$->data_type = ptr->eletype;
+								ic<<"$"+$1->value<<" = "<<$3->var<<endl;
+								$$->var = $3->var; 
 								if(get_type(ptr->eletype, $3->data_type)==_error){
 									yyerror("Mismatching datatypes of LHS and RHS: " + _type[$1->data_type] + " and " + _type[$3->data_type]);
 									$$->data_type = _error;
@@ -164,7 +168,8 @@ expression		:	id_arr_asg EQUAL expression
 					{
 						$$ = new Node("expression","");
 						$$->data_type = $1->data_type;
-						$$->children.push_back($1);						
+						$$->children.push_back($1);		
+						$$->var = $1->var;				
 					};
 
 id_arr_asg			: 	IDENTIFIER
@@ -217,7 +222,11 @@ log_exp 		:	log_exp OR and_exp
 								yyerror("Mismatch in datatype while comparision" + $$->value);
 								$$->data_type = _error;
 							}
-							else $$->data_type = _boolean;
+							else{
+								$$->data_type = _boolean;
+								$$->var = get_var();
+								ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<$3->var<<endl;	
+							}
 						}
 						else{
 								$$->data_type = _error;
@@ -229,6 +238,8 @@ log_exp 		:	log_exp OR and_exp
 					{
 						$$ = new Node("log_exp","");$$->children.push_back($1);
 						$$->data_type = $1->data_type;
+						$$->var = $1->var;
+
 					};
 
 and_exp 		:	and_exp AND rel_exp
@@ -239,7 +250,11 @@ and_exp 		:	and_exp AND rel_exp
 								yyerror("Mismatch in datatype while comparision" + $$->value);
 								$$->data_type = _error;
 							}
-							else $$->data_type = _boolean;
+							else{
+								$$->data_type = _boolean;
+								$$->var = get_var();
+								ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<$3->var<<endl;
+							}
 						}
 						else{
 								$$->data_type = _error;
@@ -251,6 +266,8 @@ and_exp 		:	and_exp AND rel_exp
 					{
 						$$ = new Node("and_exp","");$$->children.push_back($1);
 						$$->data_type = $1->data_type;
+						$$->var = $1->var;
+
 					};
 
 rel_exp 		:	rel_exp op3 sim_exp
@@ -261,7 +278,32 @@ rel_exp 		:	rel_exp op3 sim_exp
 								yyerror("Mismatch in datatype while comparision" + $$->value);
 								$$->data_type = _error;
 							}
-							else $$->data_type = _boolean;
+							else{
+								$$->data_type = _boolean;
+								Type tt = get_type($1->data_type, $3->data_type);
+								if(tt == _integer || tt == _real){
+									$$->data_type = tt;
+									if($1->data_type==$3->data_type){
+										$$->var = get_var();
+										ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<$3->var<<endl;
+									}
+									else{
+										if($1->data_type==_real){
+											string tv = get_var();
+											ic<<tv<<" = cnvrt_float("<<$1->var<<")\n";
+											$$->var = get_var();
+											ic<<$$->var<<" = "<<tv<<" "<<$2->value<<" "<<$3->var<<endl;
+										}
+										else{
+											string tv = get_var();
+											ic<<tv<<" = cnvrt_float("<<$3->var<<")\n";
+											$$->var = get_var();
+											ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<tv<<endl;
+										}
+									}
+								}
+
+							}
 						}
 						else{
 								$$->data_type = _error;
@@ -272,6 +314,7 @@ rel_exp 		:	rel_exp op3 sim_exp
 					{
 						$$ = new Node("rel_exp","");$$->children.push_back($1);
 						$$->data_type = $1->data_type;
+						$$->var = $1->var;
 						
 					};
 
@@ -280,7 +323,27 @@ sim_exp 		:	sim_exp op1 dm_exp
 						$$ = new Node("sim_exp",$1->value + $2->value + $3->value);$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);
 						if($1->data_type!=_error&&$3->data_type!=_error){	
 							Type tt = get_type($1->data_type, $3->data_type);
-							if(tt == _integer || tt == _real) $$->data_type = tt;
+							if(tt == _integer || tt == _real){
+								$$->data_type = tt;
+								if($1->data_type==$3->data_type){
+									$$->var = get_var();
+									ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<$3->var<<endl;
+								}
+								else{
+									if($1->data_type==_real){
+										string tv = get_var();
+										ic<<tv<<" = cnvrt_float("<<$1->var<<")\n";
+										$$->var = get_var();
+										ic<<$$->var<<" = "<<tv<<" "<<$2->value<<" "<<$3->var<<endl;
+									}
+									else{
+										string tv = get_var();
+										ic<<tv<<" = cnvrt_float("<<$3->var<<")\n";
+										$$->var = get_var();
+										ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<tv<<endl;
+									}
+								}
+							}
 							else{
 								yyerror("Mismatch in datatype while operation " + $$->value);
 								$$->data_type = _error;
@@ -295,6 +358,7 @@ sim_exp 		:	sim_exp op1 dm_exp
 					dm_exp
 					{
 						$$ = new Node("sim_exp",$1->value);$$->children.push_back($1);
+						$$->var = $1->var;
 						if($1->data_type == _integer || $1->data_type == _real) $$->data_type = $1->data_type;
 						else $$->data_type = _error; 
 
@@ -305,7 +369,27 @@ dm_exp 			: 	dm_exp op2 un_exp
 						$$ = new Node("dm_exp",$1->value + $2->value + $3->value);$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);
 						if($1->data_type!=_error&&$3->data_type!=_error){	
 							Type tt = get_type($1->data_type, $3->data_type);
-							if(tt == _integer || tt == _real) $$->data_type = tt;
+							if(tt == _integer || tt == _real){
+								$$->data_type = tt;
+								if($1->data_type==$3->data_type){
+									$$->var = get_var();
+									ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<$3->var<<endl;
+								}
+								else{
+									if($1->data_type==_real){
+										string tv = get_var();
+										ic<<tv<<" = cnvrt_float("<<$1->var<<")\n";
+										$$->var = get_var();
+										ic<<$$->var<<" = "<<tv<<" "<<$2->value<<" "<<$3->var<<endl;
+									}
+									else{
+										string tv = get_var();
+										ic<<tv<<" = cnvrt_float("<<$3->var<<")\n";
+										$$->var = get_var();
+										ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<tv<<endl;
+									}
+								}
+							}
 							else{
 								yyerror("Mismatch in datatype while operation " + $$->value);
 								$$->data_type = _error;
@@ -320,7 +404,10 @@ dm_exp 			: 	dm_exp op2 un_exp
 				 	un_exp
 					{
 						$$ = new Node("dm_exp",$1->value);$$->children.push_back($1);
-						if($1->data_type == _integer || $1->data_type == _real) $$->data_type = $1->data_type;
+							$$->var = $1->var;
+						if($1->data_type == _integer || $1->data_type == _real){
+							$$->data_type = $1->data_type;
+						}
 						else $$->data_type = _error; 
 
 					};
@@ -328,7 +415,11 @@ dm_exp 			: 	dm_exp op2 un_exp
 un_exp 			: 	unop term
 					{
 						$$ = new Node("un_exp",$1->value + $2->value);$$->children.push_back($1);$$->children.push_back($2);
-						if($1->data_type == _integer || $1->data_type == _real) $$->data_type = $1->data_type;
+						$$->var = get_var();
+						ic<<$$->var<<" = "<<$1->value<<" "<<$2->var<<endl;
+						if($1->data_type == _integer || $1->data_type == _real){
+							$$->data_type = $1->data_type;
+						}
 						else if($1->data_type == _boolean){
 							yyerror("Mismatch in datatype expecting integer or real got boolean. " + $$->value);
 							$$->data_type = _error;
@@ -340,11 +431,15 @@ un_exp 			: 	unop term
 					term
 					{
 						$$ = new Node("un_exp",$1->value);$$->children.push_back($1);
+						$$->var = $1->var;
 						
-						if($1->data_type == _integer || $1->data_type == _real) $$->data_type = $1->data_type;
+						if($1->data_type == _integer || $1->data_type == _real){
+							$$->data_type = $1->data_type;
+						}
 						else if($1->data_type == _boolean){
 							yyerror("Mismatch in datatype expecting integer or real got boolean. " + $$->value);
 							$$->data_type = _error;
+							
 						}
 						else $$->data_type = _error; 
 					};
@@ -416,12 +511,14 @@ term 			:	LP expression RP
 					{
 						$$ = new Node("term","");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);
 						$$->data_type = $2->data_type;
+						$$->var = $2->var;
 					}
 					|
 					INTEGERS
 					{	
 						$$ = new Node("term",$1->value);$$->children.push_back($1);
 						$$->data_type = _integer;
+						$$->var = $1->value;
 					}
 					|
 					id_arr_asg
@@ -436,7 +533,7 @@ term 			:	LP expression RP
 								$$->data_type = _error;
 							}
 						}
-
+						$$->var = "$" + $1->value;
 					};
 %%
 
@@ -475,6 +572,7 @@ void printTree(Node *tree, string term) {
 		tree_file << "[" << tree->value << "]";
 	}
 		tree_file << "[" << _type[tree->data_type] << "]";
+		tree_file << "[" << tree->var << "]";
 	tree_file << endl;
 	if(tree->children.size() > 3){
 		tree_line.push_back(true);
@@ -504,6 +602,7 @@ int main(){
 	yyparse();
 	cout<<"Total Errors: "<<error_count<<endl;
 	if(syntax_success) symtab.print();
+	cout<<ic.str();
 	tree_file.open("tree.txt",fstream::out);
 	printTree(root,"\\___");
 	tree_file.close();

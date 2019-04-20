@@ -3,6 +3,7 @@ using namespace std;
 
 extern int yylineno;
 extern int level;
+extern int var_num;
 
 enum Type{
 	_integer,
@@ -26,15 +27,17 @@ for(int i=0;i<v.size(); i++) {
 return out << "]";
 }
 Type get_type(Type a, Type b);
-
+string get_var();
 struct Node{
 	string type; 	//token class
 	string value;	//token value
 	vector <Node *> children;
 	int line_number;
+	string var;
 	Type data_type;
 	Node(string type, string value) : type(type), value(value), line_number(yylineno) {
 		data_type = _none;
+		var = "";
 	};
 };
 

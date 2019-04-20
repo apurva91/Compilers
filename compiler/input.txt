@@ -1,4 +1,5 @@
 int a;
 int b, c;
 float d, e[3,5], f[6,7];
-d = c = a + 5;
+d = c = b + a + 5;
+(3<=d);

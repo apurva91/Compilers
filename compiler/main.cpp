@@ -8,3 +8,8 @@ Type get_type(Type a, Type b){
 	if(a==_boolean && b== _boolean) return _boolean;
 	return _error;
 }
+
+string get_var(){
+	var_num++;
+	return "t" + to_string(var_num);
+}
