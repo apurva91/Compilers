@@ -28,6 +28,7 @@ return out << "]";
 }
 Type get_type(Type a, Type b);
 string get_var();
+string get_curr_var();
 struct Node{
 	string type; 	//token class
 	string value;	//token value

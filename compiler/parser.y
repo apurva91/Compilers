@@ -154,7 +154,7 @@ expression		:	id_arr_asg EQUAL expression
 							if(symtab.search_var($1->value)){
 								Variable * ptr = symtab.search_var($1->value);
 								$$->data_type = ptr->eletype;
-								ic<<"$"+$1->value<<" = "<<$3->var<<endl;
+								ic<<$1->var<<" = "<<$3->var<<endl;
 								$$->var = $3->var; 
 								if(get_type(ptr->eletype, $3->data_type)==_error){
 									yyerror("Mismatching datatypes of LHS and RHS: " + _type[$1->data_type] + " and " + _type[$3->data_type]);
@@ -185,7 +185,8 @@ id_arr_asg			: 	IDENTIFIER
 							else{
 								$$->data_type = ptr->eletype;
 							}
-						}						
+						}
+						$$->var = "$" + $1->value;						
 					} 
 					|
 					IDENTIFIER LS dimlist RS
@@ -209,6 +210,25 @@ id_arr_asg			: 	IDENTIFIER
 									
 									$$->data_type = _error;
 								}
+								else{	
+									string tv = get_var();
+									string addr = tv;
+									ic<<tv<<" = addr($" + $1->value + ")"<<endl;
+									tv = dimlist[0];
+									for(int i=1; i<ptr->dimlist.size(); i++){
+										ic<<get_var()<<" = "<< tv <<" * "<<ptr->dimlist[i]<<endl;
+										tv = get_curr_var();
+										ic<<get_var()<<" = "<<tv<<" + "<<dimlist[i]<<endl;
+										tv = get_curr_var();
+									}
+									int size = 4;
+									if(ptr->eletype==_real) size = 8;
+									
+									ic<<get_var() + " = " + tv + " * " + to_string(size)<<endl;
+									tv = get_curr_var();
+									$$->var = addr + "[" + tv + "]";
+								}
+
 								dimlist.clear();
 							}
 						}	
@@ -533,7 +553,8 @@ term 			:	LP expression RP
 								$$->data_type = _error;
 							}
 						}
-						$$->var = "$" + $1->value;
+						$$->var = $1->var;
+						
 					};
 %%
 

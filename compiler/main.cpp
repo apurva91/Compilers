@@ -13,3 +13,8 @@ string get_var(){
 	var_num++;
 	return "t" + to_string(var_num);
 }
+
+string get_curr_var(){
+	
+	return "t" + to_string(var_num);
+}
