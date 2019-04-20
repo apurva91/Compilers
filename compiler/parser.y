@@ -83,7 +83,7 @@ id_arr			: 	IDENTIFIER
 						$$->children.push_back($1);
 						if(active_func_ptr==NULL){
 							if(symtab.search_var($1->value)){
-								yyerror("Variable " + $1->value + " already declared.");
+								yyerror("Variable \033[1;31m" + $1->value + "\033[0m already declared.");
 								error_count++;
 							}
 							else{
@@ -102,7 +102,7 @@ id_arr			: 	IDENTIFIER
 						$$->children.push_back($4);
 						if(active_func_ptr==NULL){
 							if(symtab.search_var($1->value)){
-								yyerror("Variable " + $1->value + " already declared.");
+								yyerror("Variable \033[1;31m" + $1->value + "\033[0m already declared.");
 								error_count++;
 							}
 							else{
@@ -139,7 +139,7 @@ dimlist			:	INTEGERS
 bool syntax_success = true;
 
 void yyerror(string s){
-	cerr<<"Line Number " << yylineno <<" : "<<s<<endl;
+	cerr<<"Line Number \033[1;31m" << yylineno <<"\033[0m : "<<s<<endl;
 	syntax_success = false;
 }
 
