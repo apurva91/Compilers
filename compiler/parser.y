@@ -24,7 +24,7 @@
 
 %token<node> SEMI EQUAL ADD SUB MUL DIV MOD GT LT GE LE EQ NE OR AND LP RP LB RB LS RS COMMA MAIN INT VOID FLOAT FOR WHILE IF ELSE SWITCH CASE DEFAULT BREAK CONTINU RETURN INTEGERS FLOATING_POINTS IDENTIFIER
 
-%type<node> start statements statement d t l id_arr id_arr_asg dimlist assignment sim_exp un_exp dm_exp log_exp and_exp rel_exp op1 op2 op3 term unop
+%type<node> start statements statement d t l id_arr id_arr_asg dimlist expression sim_exp un_exp dm_exp log_exp and_exp rel_exp op1 op2 op3 term unop
 
 %start start
 
@@ -46,7 +46,7 @@ statements		:	statement
 statement		:	d SEMI
 					{ $$ = new Node("statement","");$$->children.push_back($1);} 
 					|
-					assignment SEMI
+					expression SEMI
 					{ $$ = new Node("statement","");$$->children.push_back($1);$$->children.push_back($2);}
 					;
 d				:	t l 
@@ -93,7 +93,7 @@ id_arr			: 	IDENTIFIER
 						if(active_func_ptr==NULL){
 							if(symtab.search_var($1->value)){
 								yyerror("Variable \033[1;31m" + $1->value + "\033[0m already declared.");
-								error_count++;
+								
 							}
 							else{
 								Variable * t = symtab.enter_var($1->value,_simple,_none);
@@ -112,7 +112,7 @@ id_arr			: 	IDENTIFIER
 						if(active_func_ptr==NULL){
 							if(symtab.search_var($1->value)){
 								yyerror("Variable \033[1;31m" + $1->value + "\033[0m already declared.");
-								error_count++;
+								
 							}
 							else{
 								Variable * t = symtab.enter_var($1->value,_array,_none);
@@ -139,7 +139,7 @@ dimlist			:	INTEGERS
 					};
 //variable or an array element assigned an expression
 //						
-assignment		:	id_arr_asg EQUAL sim_exp
+expression		:	id_arr_asg EQUAL expression
 					{
 						$$ = new Node("expression","=");
 						$$->children.push_back($1);
@@ -159,21 +159,13 @@ assignment		:	id_arr_asg EQUAL sim_exp
 							}
 						}
 					}					
-
-// expression:			rel_exp
-// 					{
-// 						$$ = new Node("expression","");
-// 						$$->data_type = $1->data_type;
-// 						$$->children.push_back($1);						
-// 					}
-// 					|
-// 					log_exp
-// 					{ 
-// 						$$ = new Node("expression","");
-// 						$$->data_type = _boolean;
-// 						$$->children.push_back($1);
-// 					}
-// 					;
+					|
+					log_exp
+					{
+						$$ = new Node("expression","");
+						$$->data_type = $1->data_type;
+						$$->children.push_back($1);						
+					};
 
 id_arr_asg			: 	IDENTIFIER
 					{
@@ -183,7 +175,7 @@ id_arr_asg			: 	IDENTIFIER
 							Variable * ptr = symtab.search_var($1->value);
 							if(ptr==NULL){
 								yyerror("Variable \033[1;31m" + $1->value + "\033[0m not declared.");
-								error_count++;
+								
 							}
 							else{
 								$$->data_type = ptr->eletype;
@@ -202,14 +194,14 @@ id_arr_asg			: 	IDENTIFIER
 							Variable * ptr = symtab.search_var($1->value);
 							if(ptr==NULL){
 								yyerror("Variable \033[1;31m" + $1->value + "\033[0m not declared.");
-								error_count++;
+								
 								$$->data_type = _error;
 							}
 							else{
 								$$->data_type = ptr->eletype;
 								if(ptr->dimlist.size()!=dimlist.size()){
 									yyerror("Variable \033[1;31m" + $1->value + "\033[0m unmatching dimensions.");
-									error_count++;
+									
 									$$->data_type = _error;
 								}
 								dimlist.clear();
@@ -218,39 +210,85 @@ id_arr_asg			: 	IDENTIFIER
 					};
 
 log_exp 		:	log_exp OR and_exp
-					{$$ = new Node("log_exp","or");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);}
+					{
+						$$ = new Node("log_exp","or");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);
+						if($1->data_type!=_error&&$3->data_type!=_error){	
+							if(get_type($1->data_type,$3->data_type)==_error){
+								yyerror("Mismatch in datatype while comparision" + $$->value);
+								$$->data_type = _error;
+							}
+							else $$->data_type = _boolean;
+						}
+						else{
+								$$->data_type = _error;
+						}
+
+					}
 					| 
 					and_exp
-					{$$ = new Node("log_exp","");$$->children.push_back($1);};
+					{
+						$$ = new Node("log_exp","");$$->children.push_back($1);
+						$$->data_type = $1->data_type;
+					};
 
 and_exp 		:	and_exp AND rel_exp
 					{
 						$$ = new Node("and_exp","and");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);
+						if($1->data_type!=_error&&$3->data_type!=_error){	
+							if(get_type($1->data_type,$3->data_type)==_error){
+								yyerror("Mismatch in datatype while comparision" + $$->value);
+								$$->data_type = _error;
+							}
+							else $$->data_type = _boolean;
+						}
+						else{
+								$$->data_type = _error;
+						}
+						
 					}
 					|
 					rel_exp
 					{
 						$$ = new Node("and_exp","");$$->children.push_back($1);
+						$$->data_type = $1->data_type;
 					};
 
 rel_exp 		:	rel_exp op3 sim_exp
 					{
 						$$ = new Node("rel_exp","op");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);
-						
+						if($1->data_type!=_error&&$3->data_type!=_error){	
+							if(get_type($1->data_type,$3->data_type)==_error){
+								yyerror("Mismatch in datatype while comparision" + $$->value);
+								$$->data_type = _error;
+							}
+							else $$->data_type = _boolean;
+						}
+						else{
+								$$->data_type = _error;
+						}
 					}
 					|
 					sim_exp
 					{
 						$$ = new Node("rel_exp","");$$->children.push_back($1);
-						$$
+						$$->data_type = $1->data_type;
+						
 					};
 
 sim_exp 		:	sim_exp op1 dm_exp
 					{
 						$$ = new Node("sim_exp",$1->value + $2->value + $3->value);$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);
-						Type tt = get_type($1->data_type, $3->data_type);
-						if(tt == _integer || tt == _real) $$->data_type = tt;
-						else $$->data_type = _error; 
+						if($1->data_type!=_error&&$3->data_type!=_error){	
+							Type tt = get_type($1->data_type, $3->data_type);
+							if(tt == _integer || tt == _real) $$->data_type = tt;
+							else{
+								yyerror("Mismatch in datatype while operation " + $$->value);
+								$$->data_type = _error;
+							} 
+						}
+						else{
+								$$->data_type = _error;
+						}
 
 					}
 					|
@@ -265,9 +303,17 @@ sim_exp 		:	sim_exp op1 dm_exp
 dm_exp 			: 	dm_exp op2 un_exp
 					{
 						$$ = new Node("dm_exp",$1->value + $2->value + $3->value);$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);
-						Type tt = get_type($1->data_type, $3->data_type);
-						if(tt == _integer || tt == _real) $$->data_type = tt;
-						else $$->data_type = _error; 
+						if($1->data_type!=_error&&$3->data_type!=_error){	
+							Type tt = get_type($1->data_type, $3->data_type);
+							if(tt == _integer || tt == _real) $$->data_type = tt;
+							else{
+								yyerror("Mismatch in datatype while operation " + $$->value);
+								$$->data_type = _error;
+							} 
+						}
+						else{
+								$$->data_type = _error;
+						}
 
 					}
 					|
@@ -283,6 +329,10 @@ un_exp 			: 	unop term
 					{
 						$$ = new Node("un_exp",$1->value + $2->value);$$->children.push_back($1);$$->children.push_back($2);
 						if($1->data_type == _integer || $1->data_type == _real) $$->data_type = $1->data_type;
+						else if($1->data_type == _boolean){
+							yyerror("Mismatch in datatype expecting integer or real got boolean. " + $$->value);
+							$$->data_type = _error;
+						}
 						else $$->data_type = _error; 
 
 					}
@@ -290,7 +340,12 @@ un_exp 			: 	unop term
 					term
 					{
 						$$ = new Node("un_exp",$1->value);$$->children.push_back($1);
+						
 						if($1->data_type == _integer || $1->data_type == _real) $$->data_type = $1->data_type;
+						else if($1->data_type == _boolean){
+							yyerror("Mismatch in datatype expecting integer or real got boolean. " + $$->value);
+							$$->data_type = _error;
+						}
 						else $$->data_type = _error; 
 					};
 
@@ -357,7 +412,7 @@ unop 			:	SUB
 						$$ = new Node("unop", "+");$$->children.push_back($1);
 					};
 
-term 			:	LP log_exp RP
+term 			:	LP expression RP
 					{
 						$$ = new Node("term","");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);
 						$$->data_type = $2->data_type;
@@ -389,15 +444,68 @@ bool syntax_success = true;
 
 void yyerror(string s){
 	cerr<<"Line Number \033[1;31m" << yylineno <<"\033[0m : "<<s<<endl;
+	error_count++;
 	syntax_success = false;
 }
 
+
+vector<bool> tree_line;
+fstream tree_file;
+void printTree(Node *tree, string term) {
+	if(tree == NULL){
+		return;
+	}
+	for(int j = 1; j <= 2 ; j++){
+		for (int i = 0; i < (int)(tree_line.size() - 1); i++) {
+			if(tree_line.at(i)){
+				tree_file << "|\t\t";
+			} else {
+				tree_file << "\t\t";
+			}
+		}
+		if(j == 1){
+			tree_file<<"|"<<endl;
+		}
+	}
+	if(!tree_line.empty()){
+		tree_file << term;
+	}
+	tree_file << tree->type;
+	if(tree->value != "") {
+		tree_file << "[" << tree->value << "]";
+	}
+		tree_file << "[" << _type[tree->data_type] << "]";
+	tree_file << endl;
+	if(tree->children.size() > 3){
+		tree_line.push_back(true);
+		printTree(tree->children[3], term);
+		tree_line.pop_back();
+	}
+	if(tree->children.size() > 2){
+		tree_line.push_back(true);
+		printTree(tree->children[2], term);
+		tree_line.pop_back();
+	}
+	if(tree->children.size() > 1){
+		tree_line.push_back(true);
+		printTree(tree->children[1], term);
+		tree_line.pop_back();
+	}
+	if(tree->children.size() > 0){
+		tree_line.push_back(false);
+		printTree(tree->children[0], term);
+		tree_line.pop_back();
+	}
+}
 
 int yywrap(){}
 
 int main(){
 	yyparse();
-	// cout<<"Total Errors: "<<error_count<<endl;
+	cout<<"Total Errors: "<<error_count<<endl;
 	if(syntax_success) symtab.print();
+	tree_file.open("tree.txt",fstream::out);
+	printTree(root,"\\___");
+	tree_file.close();
 	return 0;
 }
