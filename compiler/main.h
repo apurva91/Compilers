@@ -26,9 +26,12 @@ for(int i=0;i<v.size(); i++) {
 }
 return out << "]";
 }
+
 Type get_type(Type a, Type b);
 string get_var();
 string get_curr_var();
+bool is_number(string s);
+
 struct Node{
 	string type; 	//token class
 	string value;	//token value
@@ -50,7 +53,7 @@ struct Variable{
 	int level;
 	Variable(string id, Type type, Type eletype, int level): id(id), type(type), eletype(eletype), level(level){};
 	void print(){
-		cout<<"| "<< id <<" | "<< _type[type] <<" | "<<_type[eletype]<<" | " << level <<" | "<< dimlist<<endl;
+		cout<<"| "<< id <<" | "<< _type[type] <<" | "<<_type[eletype]<<" | " << level <<" | "<< dimlist<<" | "<<endl;
 	}
 	// ostream &operator <<(ostream &os){
 	// 	os<<"| "<< id <<" | "<< type <<" | "<<eletype<<" | " << level <<" | "<< dimlist<<" |";
@@ -67,6 +70,22 @@ struct Function{
 	Function(string id, Type return_type): id(id), return_type(return_type){
 		num_param = 0;
 	};
+	void print(){
+		cout<<"| "<< id <<" | "<< _type[return_type] <<" | "<<num_param <<" | "<<endl;
+		if(parameters.size()>0) cout<<"Parameters: "<<endl;
+		for(int i=0; i<parameters.size(); i++){
+			parameters[i]->print();
+		}
+		if(variables.size()>1){	
+			cout<<"Variables: "<<endl;
+			cout<<"| id | type | element type  | level | dimlist |"<<endl;
+		}
+		for(int i=2; i<variables.size(); i++){
+			for(auto it=variables[i].begin(); it!= variables[i].end(); it++){
+				it->second->print();
+			}
+		}
+	}
 	Variable * search_param(string name){
 		for(int i=0; i<parameters.size(); i++){
 			if(parameters[i]->id==name) return parameters[i];
@@ -78,12 +97,7 @@ struct Function{
 		return parameters.back();
 		num_param++;
 	}
-	Variable * search_var(string id, int level){
-		for(int i=0; i<=level; i++){
-			if(variables[i].count(id)!=0) return variables[i][id];
-		}
-		return NULL;
-	}
+	Variable * search_var(string id, int level);
 	Variable * enter_var(string id, Type type, Type eletype, int level){
 		variables[level][id] = new Variable(id,type,eletype,level);
 		return variables[level][id];
@@ -128,41 +142,10 @@ struct SymbolTable{
 		for(auto it=variables.begin(); it!= variables.end(); it++){
 			it->second->print();
 		}
-		// cout<<"Functions: "<<endl;
-		// for(auto it=functions.begin(); it!= functions.end(); it++){
-		// 	it->second->print();
-		// }
+		cout<<"Functions: "<<endl;
+		cout<<"| id | type | num_param |"<<endl;
+		for(auto it=functions.begin(); it!= functions.end(); it++){
+			it->second->print();
+		}
 	}
 };
-
-// vector <string> var_list(Node * node){
-// 	if(node->children.size()==3){
-
-// 	}
-// 	else{
-// 		return node->children
-// 	}
-// }
-
-// // void parse_tree(Node * node){
-// 	if(node==NULL) return;
-// 	if(node->type=="start"){
-// 		parse_tree(node->children[0]);
-// 	}
-// 	else if(node->type=="dlist"){
-// 		if(node->children.size()==2){
-// 			parse_tree(node->children[0]);
-// 			parse_tree(node->children[1]);
-// 		}
-// 		else{
-// 			parse_tree(node->children[0]);
-// 		}
-// 	}
-// 	else if(node->type=="d"){
-// 			get_var_list
-// 			parse_tree(node->children[0]);
-// 			parse_tree(node->children[1]);
-// 			parse_tree(node->children[2]);
-// 	} 
-// 	return;
-// }

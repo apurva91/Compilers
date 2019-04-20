@@ -32,7 +32,6 @@
 "["			{ yylval.node = new Node("LS",yytext); return LS; }
 "]"			{ yylval.node = new Node("RS",yytext); return RS; }	
 ","			{ yylval.node = new Node("COMMA",yytext); return COMMA; } 
-"main"		{ yylval.node = new Node("MAIN",yytext); return MAIN; }
 "int"		{ yylval.node = new Node("INT",yytext); return INT; }	
 "void"		{ yylval.node = new Node("VOID",yytext); return VOID; }
 "float"		{ yylval.node = new Node("FLOAT",yytext); return FLOAT; } 

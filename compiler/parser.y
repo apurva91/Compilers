@@ -24,9 +24,9 @@
 	Node * node;
 }
 
-%token<node> SEMI EQUAL ADD SUB MUL DIV MOD GT LT GE LE EQ NE OR AND LP RP LB RB LS RS COMMA MAIN INT VOID FLOAT FOR WHILE IF ELSE SWITCH CASE DEFAULT BREAK CONTINU RETURN INTEGERS FLOATING_POINTS IDENTIFIER
+%token<node> SEMI EQUAL ADD SUB MUL DIV MOD GT LT GE LE EQ NE OR AND LP RP LB RB LS RS COMMA  INT VOID FLOAT FOR WHILE IF ELSE SWITCH CASE DEFAULT BREAK CONTINU RETURN INTEGERS FLOATING_POINTS IDENTIFIER
 
-%type<node> start statements statement d t l id_arr id_arr_asg dimlist expression sim_exp un_exp dm_exp log_exp and_exp rel_exp op1 op2 op3 term unop
+%type<node> start statements statement decl function_declaration res_id func_head param_list param param_list_main declaration_list d t l id_arr id_arr_asg dimlist expression sim_exp un_exp dm_exp log_exp and_exp rel_exp op1 op2 op3 term unop
 
 %start start
 
@@ -35,9 +35,12 @@
 
 %%
 
-start			:	statements 
-					{ $$ = new Node("start",""); $$->children.push_back($1); root = $$; }
-					;
+start			:	declaration_list 
+					{
+						$$ = new Node("start",""); 
+						$$->children.push_back($1); 
+						root = $$; 
+					};
 
 statements		:	statement
 					{ $$ = new Node("statements","");$$->children.push_back($1);} 
@@ -45,18 +48,142 @@ statements		:	statement
 					statement statements
 					{$$ = new Node("statements","");$$->children.push_back($1);$$->children.push_back($2);}
 					;
-statement		:	d SEMI
+
+statement		:	d
 					{ $$ = new Node("statement","");$$->children.push_back($1);} 
 					|
 					expression SEMI
 					{ $$ = new Node("statement","");$$->children.push_back($1);$$->children.push_back($2);}
-					;
-d				:	t l 
+					|
+					level_increase LB statements RB
+					{
+						$$ = new Node("statement","");$$->children.push_back($2);$$->children.push_back($3);$$->children.push_back($4);	
+						level--;
+						active_func_ptr->decrease_level();
+					}
+					|
+					RETURN id_arr_asg SEMI
+					{
+						$$ = new Node("statement","");$$->children.push_back($1);$$->children.push_back($2);
+						ic<<"return " + $2->var<<endl;
+					}
+					|
+					RETURN INTEGERS SEMI
+					{
+						$$ = new Node("statement","");$$->children.push_back($1);$$->children.push_back($2);
+						ic<<"return " + $2->value<<endl;
+					};
+level_increase	:	{
+						level++;
+						active_func_ptr->increase_level();
+					};
+declaration_list:	declaration_list decl
+					{
+						$$ = new Node("declaration_list","");
+						$$->children.push_back($1);
+						$$->children.push_back($2);
+					};
+					|
+					decl
+					{
+						$$ = new Node("declaration_list","");
+						$$->children.push_back($1);
+					};
+
+decl			:	d
+					{
+						$$ = new Node("decl","");
+						$$->children.push_back($1);
+					}
+					|
+					function_declaration					
+					{
+						$$ = new Node("decl","");
+						$$->children.push_back($1);
+					};
+
+function_declaration:	func_head LB statements RB
+						{
+							// active_func_ptr->print();
+							active_func_ptr->decrease_level();
+							active_func_ptr->decrease_level();
+							active_func_ptr = NULL;
+							level = 0;
+							ic<<"func end"<<endl;
+
+						};
+
+func_head		:	res_id LP param_list_main RP
+					{
+						$$ = new Node("func_head","");
+						$$->children.push_back($1);
+						$$->children.push_back($2);
+						$$->children.push_back($3);
+						$$->children.push_back($4);
+						level = 2;
+						active_func_ptr->increase_level();
+					};
+param_list_main	:	param_list 
+					{
+						$$ = new Node("param_list_main","");
+						$$->children.push_back($1);
+					}
+					|
+					{
+						$$ = new Node("param_list_main","");
+					};
+param_list 		:	param 
+					{
+						$$ = new Node("param_list","");
+						$$->children.push_back($1);
+					}
+					| 
+					param COMMA param_list
+					{
+						$$ = new Node("param_list","");
+						$$->children.push_back($1);
+						$$->children.push_back($2);
+						$$->children.push_back($3);
+					};
+
+res_id			:	t IDENTIFIER
+					{
+						$$ = new Node("res_id","");
+						$$->children.push_back($1);
+						$$->children.push_back($2);
+						Function * fnptr = symtab.search_function($2->value);
+						if(fnptr){
+							yyerror("Function Already Declared");
+						}
+						else{
+							active_func_ptr = symtab.enter_func($2->value,$1->data_type);
+						}
+						active_func_ptr->increase_level();
+						level = 1;
+						active_func_ptr->increase_level();
+						ic<<"func begin "<<$2->value<<endl;
+					};
+param			:	t IDENTIFIER
+					{
+						$$ = new Node("param","");
+						$$->children.push_back($1);
+						$$->children.push_back($2);
+						if(active_func_ptr!=NULL){
+							if(active_func_ptr->search_param($2->value)){
+								yyerror("Parameter already declared");
+							}
+							else{
+								active_func_ptr->enter_param($2->value,_simple,$1->data_type);
+							}
+						}
+					};
+
+d				:	t l SEMI
 					{
 						$$ = new Node("d","");
 						$$->children.push_back($1);
 						$$->children.push_back($2);
-						// $$->children.push_back($3);
+						$$->children.push_back($3);
 						for(int i=0; i<patch.size(); i++){
 							patch[i]->eletype = $1->data_type;
 						}
@@ -101,6 +228,20 @@ id_arr			: 	IDENTIFIER
 								Variable * t = symtab.enter_var($1->value,_simple,_none);
 								patch.push_back(t);
 							}
+						}
+						else{
+							Variable * ptr = active_func_ptr->search_var($1->value, level);
+
+							if(ptr&&ptr->level==level){
+								yyerror("Variable already declared in current scope");
+							}
+							else if(ptr&&level==2&&ptr->level==1){
+								yyerror("Cant redeclare parameter in this scope");
+							}
+							else{
+								ptr = active_func_ptr->enter_var($1->value,_simple,_none,level);
+								patch.push_back(ptr);
+							}
 						}						
 					} 
 					|
@@ -123,12 +264,34 @@ id_arr			: 	IDENTIFIER
 								patch.push_back(t);
 							}
 						}
+						else{
+							Variable * ptr = active_func_ptr->search_var($1->value, level);
+
+							if(ptr&&ptr->level==level){
+								yyerror("Variable already declared in current scope");
+							}
+							else if(ptr&&level==2&&ptr->level==1){
+								yyerror("Cant redeclare parameter in this scope");
+							}
+							else{
+								ptr = active_func_ptr->enter_var($1->value,_array,_none,level);
+								ptr->dimlist = dimlist;
+								dimlist.clear();
+								patch.push_back(ptr);
+							}
+						}
 					};
 dimlist			:	INTEGERS
 					{ 
 						$$ = new Node("dimlist","");
 						$$->children.push_back($1);
-						dimlist.insert(dimlist.begin(),($1->value));
+						// if($1->data_type!=_integer){
+						// 	yyerror("Arrays can only be indexed using integers.");
+						// }
+						// ic<<get_var()<<" = "<<$1->var<<endl;
+						// dimlist.insert(dimlist.begin(),(get_curr_var()));
+						dimlist.insert(dimlist.begin(),$1->value);
+
 					} 
 					| 
 					INTEGERS COMMA dimlist
@@ -137,7 +300,12 @@ dimlist			:	INTEGERS
 						$$->children.push_back($1);
 						$$->children.push_back($2);
 						$$->children.push_back($3);
-						dimlist.insert(dimlist.begin(),($1->value));
+						// if($1->data_type!=_integer){
+						// 	yyerror("Arrays can only be indexed using integers.");
+						// }
+						// ic<<get_var()<<" = "<<$1->var<<endl;
+						// dimlist.insert(dimlist.begin(),(get_curr_var()));
+						dimlist.insert(dimlist.begin(),$1->value);
 					};
 //variable or an array element assigned an expression
 //						
@@ -162,6 +330,18 @@ expression		:	id_arr_asg EQUAL expression
 								}
 							}
 						}
+						else{
+							Variable * ptr = active_func_ptr->search_var($1->value,level);
+							if(ptr){
+								$$->data_type = ptr->eletype;
+								ic<<$1->var<<" = "<<$3->var<<endl;
+								$$->var = $3->var; 
+								if(get_type(ptr->eletype, $3->data_type)==_error){
+									yyerror("Mismatching datatypes of LHS and RHS: " + _type[$1->data_type] + " and " + _type[$3->data_type]);
+									$$->data_type = _error;
+								}
+							}
+						}
 					}					
 					|
 					log_exp
@@ -176,6 +356,7 @@ id_arr_asg			: 	IDENTIFIER
 					{
 						$$ = new Node("id_arr",$1->value);
 						$$->children.push_back($1);
+						$$->var = "$" + $1->value;						
 						if(active_func_ptr==NULL){
 							Variable * ptr = symtab.search_var($1->value);
 							if(ptr==NULL){
@@ -186,7 +367,16 @@ id_arr_asg			: 	IDENTIFIER
 								$$->data_type = ptr->eletype;
 							}
 						}
-						$$->var = "$" + $1->value;						
+						else{
+							Variable * ptr = active_func_ptr->search_var($1->value,level);
+							if(ptr){
+								$$->data_type = ptr->eletype;
+								if(ptr->level!=0) $$->var+="$" + active_func_ptr->id + "$" + to_string(ptr->level);
+							}
+							else{
+								yyerror("Variable \033[1;31m" + $1->value + "\033[0m not declared.");
+							}
+						}
 					} 
 					|
 					IDENTIFIER LS dimlist RS
@@ -196,42 +386,48 @@ id_arr_asg			: 	IDENTIFIER
 						$$->children.push_back($2);
 						$$->children.push_back($3);
 						$$->children.push_back($4);
+						Variable * ptr;
+						string ht = "";
 						if(active_func_ptr==NULL){
-							Variable * ptr = symtab.search_var($1->value);
-							if(ptr==NULL){
-								yyerror("Variable \033[1;31m" + $1->value + "\033[0m not declared.");
+							ptr = symtab.search_var($1->value);
+						}
+						else{
+							ptr = active_func_ptr->search_var($1->value,level);
+							if(ptr&&ptr->level!=0) ht += "$" + active_func_ptr->id + "$" + to_string(ptr->level);
+						}
+
+						if(ptr==NULL){
+							yyerror("Variable \033[1;31m" + $1->value + "\033[0m not declared.");
+							
+							$$->data_type = _error;
+						}
+						else{
+							$$->data_type = ptr->eletype;
+							if(ptr->dimlist.size()!=dimlist.size()){
+								yyerror("Variable \033[1;31m" + $1->value + "\033[0m unmatching dimensions.");
 								
 								$$->data_type = _error;
 							}
-							else{
-								$$->data_type = ptr->eletype;
-								if(ptr->dimlist.size()!=dimlist.size()){
-									yyerror("Variable \033[1;31m" + $1->value + "\033[0m unmatching dimensions.");
-									
-									$$->data_type = _error;
-								}
-								else{	
-									string tv = get_var();
-									string addr = tv;
-									ic<<tv<<" = addr($" + $1->value + ")"<<endl;
-									tv = dimlist[0];
-									for(int i=1; i<ptr->dimlist.size(); i++){
-										ic<<get_var()<<" = "<< tv <<" * "<<ptr->dimlist[i]<<endl;
-										tv = get_curr_var();
-										ic<<get_var()<<" = "<<tv<<" + "<<dimlist[i]<<endl;
-										tv = get_curr_var();
-									}
-									int size = 4;
-									if(ptr->eletype==_real) size = 8;
-									
-									ic<<get_var() + " = " + tv + " * " + to_string(size)<<endl;
+							else{	
+								string tv = get_var();
+								string addr = tv;
+								ic<<tv<<" = addr($" + $1->value +ht +")"<<endl;
+								tv = dimlist[0];
+								for(int i=1; i<ptr->dimlist.size(); i++){
+									ic<<get_var()<<" = "<< tv <<" * "<<ptr->dimlist[i]<<endl;
 									tv = get_curr_var();
-									$$->var = addr + "[" + tv + "]";
+									ic<<get_var()<<" = "<<tv<<" + "<<dimlist[i]<<endl;
+									tv = get_curr_var();
 								}
-
-								dimlist.clear();
+								int size = 4;
+								if(ptr->eletype==_real) size = 8;
+								
+								ic<<get_var() + " = " + tv + " * " + to_string(size)<<endl;
+								tv = get_curr_var();
+								$$->var = addr + "[" + tv + "]";
 							}
-						}	
+							dimlist.clear();
+						}
 					};
 
 log_exp 		:	log_exp OR and_exp
@@ -239,7 +435,7 @@ log_exp 		:	log_exp OR and_exp
 						$$ = new Node("log_exp","or");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);
 						if($1->data_type!=_error&&$3->data_type!=_error){	
 							if(get_type($1->data_type,$3->data_type)==_error){
-								yyerror("Mismatch in datatype while comparision" + $$->value);
+								yyerror("Mismatch in datatype while comparision " + $$->value);
 								$$->data_type = _error;
 							}
 							else{
@@ -259,7 +455,6 @@ log_exp 		:	log_exp OR and_exp
 						$$ = new Node("log_exp","");$$->children.push_back($1);
 						$$->data_type = $1->data_type;
 						$$->var = $1->var;
-
 					};
 
 and_exp 		:	and_exp AND rel_exp
@@ -267,7 +462,7 @@ and_exp 		:	and_exp AND rel_exp
 						$$ = new Node("and_exp","and");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);
 						if($1->data_type!=_error&&$3->data_type!=_error){	
 							if(get_type($1->data_type,$3->data_type)==_error){
-								yyerror("Mismatch in datatype while comparision" + $$->value);
+								yyerror("Mismatch in datatype while comparision " + $$->value);
 								$$->data_type = _error;
 							}
 							else{
@@ -295,7 +490,7 @@ rel_exp 		:	rel_exp op3 sim_exp
 						$$ = new Node("rel_exp","op");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);
 						if($1->data_type!=_error&&$3->data_type!=_error){	
 							if(get_type($1->data_type,$3->data_type)==_error){
-								yyerror("Mismatch in datatype while comparision" + $$->value);
+								yyerror("Mismatch in datatype while comparision " + $$->value);
 								$$->data_type = _error;
 							}
 							else{
@@ -622,8 +817,10 @@ int yywrap(){}
 int main(){
 	yyparse();
 	cout<<"Total Errors: "<<error_count<<endl;
-	if(syntax_success) symtab.print();
-	cout<<ic.str();
+	if(syntax_success){
+		symtab.print();
+		cout<<ic.str();
+	}
 	tree_file.open("tree.txt",fstream::out);
 	printTree(root,"\\___");
 	tree_file.close();
