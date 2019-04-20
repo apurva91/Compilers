@@ -11,6 +11,11 @@
 	Node * root;
 	int level = 0;
 	SymbolTable symtab;
+
+	vector <Variable *> patch;
+	Function * active_func_ptr = NULL;
+	vector <string> dimlist;
+	int error_count = 0;
 %}
 
 %union{
@@ -19,7 +24,7 @@
 
 %token<node> SEMI EQUAL ADD SUB MUL DIV MOD GT LT GE LE EQ NE OR AND LP RP LB RB LS RS COMMA MAIN INT VOID FLOAT FOR WHILE IF ELSE SWITCH CASE DEFAULT BREAK CONTINU RETURN INTEGERS FLOATING_POINTS IDENTIFIER
 
-%type<node> start dlist d t l id_arr dimlist num_id
+%type<node> start dlist  d t l id_arr dimlist 
 
 %start start
 
@@ -28,56 +33,106 @@
 
 %%
 
-start			:	statements 
-					{ $$ = new Node("start",""); $$->children.push_back($1); root = $$; };
-
-statements		:	statement
-					{ $$ = new Node("statements","");$$->children.push_back($1);} 
-					|
-					statement statements
-					{$$ = new Node("statements","");$$->children.push_back($1);$$->children.push_back($2);};
-statement		:	var_decl
-					{ $$ = new Node("statement","");$$->children.push_back($1);} 
-					|
-					expression SEMI
-					{ $$ = new Node("statement","");$$->children.push_back($1);$$->children.push_back($2);};
-var_decl		: 	dlist SEMI
-					{ $$ = new Node("var_decl",""); $$->children.push_back($1);};
-dlist			:	d
+start			:	dlist
+					{ $$ = new Node("start",""); $$->children.push_back($1);}
+dlist			:	d	
 					{ $$ = new Node("dlist",""); $$->children.push_back($1);}
 					|
-					dlist SEMI d 
-					{ $$ = new Node("dlist","");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);};
-d				:	t l 
-					{ $$ = new Node("d","");$$->children.push_back($1);$$->children.push_back($2);};
+					d dlist  
+					{ $$ = new Node("dlist","");$$->children.push_back($1);$$->children.push_back($2);};
+d				:	t l SEMI
+					{
+						$$ = new Node("d","");
+						$$->children.push_back($1);
+						$$->children.push_back($2);
+						$$->children.push_back($3);
+						for(int i=0; i<patch.size(); i++){
+							patch[i]->eletype = $1->data_type;
+						}
+						patch.clear();
+					};
 t				:	INT
-					{$$ = new Node("t",$1->value);$$->children.push_back($1);} 
+					{
+						$$ = new Node("t",$1->value);
+						$$->children.push_back($1);
+						$$->data_type = _integer;
+					} 
 					|
 					FLOAT 
-					{$$ = new Node("t",$1->value);$$->children.push_back($1);} ;
+					{
+						$$ = new Node("t",$1->value);
+						$$->children.push_back($1);
+						$$->data_type = _real;
+					};
 l				:	id_arr
-					{ $$ = new Node("l",""); $$->children.push_back($1);}
+					{
+						$$ = new Node("l","");
+						$$->children.push_back($1);
+					}
 					|
-					id_arr COMMA l;
-					{ $$ = new Node("l","");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);};
+					id_arr COMMA l
+					{
+						$$ = new Node("l","");
+						$$->children.push_back($1);
+						$$->children.push_back($2);
+						$$->children.push_back($3);
+					};
 id_arr			: 	IDENTIFIER
-					{ $$ = new Node("id_arr",""); $$->children.push_back($1);} 
+					{
+						$$ = new Node("id_arr",$1->value);
+						$$->children.push_back($1);
+						if(active_func_ptr==NULL){
+							if(symtab.search_var($1->value)){
+								yyerror("Variable " + $1->value + " already declared.");
+								error_count++;
+							}
+							else{
+								Variable * t = symtab.enter_var($1->value,_simple,_none);
+								patch.push_back(t);
+							}
+						}						
+					} 
 					|
 					IDENTIFIER LS dimlist RS
-					{ $$ = new Node("id_arr",""); $$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);$$->children.push_back($4);};
-dimlist			:	num_id
-					{ $$ = new Node("dimlist",""); $$->children.push_back($1);} 
+					{
+						$$ = new Node("id_arr",$1->value);
+						$$->children.push_back($1);
+						$$->children.push_back($2);
+						$$->children.push_back($3);
+						$$->children.push_back($4);
+						if(active_func_ptr==NULL){
+							if(symtab.search_var($1->value)){
+								yyerror("Variable " + $1->value + " already declared.");
+								error_count++;
+							}
+							else{
+								Variable * t = symtab.enter_var($1->value,_array,_none);
+								t->dimlist = dimlist;
+								dimlist.clear();
+								patch.push_back(t);
+							}
+						}
+					};
+dimlist			:	INTEGERS
+					{ 
+						$$ = new Node("dimlist","");
+						$$->children.push_back($1);
+						dimlist.insert(dimlist.begin(),($1->value));
+					} 
 					| 
-					num_id COMMA dimlist
-					{ $$ = new Node("dimlist",""); $$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);};
-num_id			:	INTEGERS
-					{ $$ = new Node("num_id",$1->value); $$->children.push_back($1);} 
-					|
-					IDENTIFIER
-					{ $$ = new Node("dimlist",$1->value); $$->children.push_back($1);};
-					
-//expression		:						
-
+					INTEGERS COMMA dimlist
+					{
+						$$ = new Node("dimlist",""); 
+						$$->children.push_back($1);
+						$$->children.push_back($2);
+						$$->children.push_back($3);
+						dimlist.insert(dimlist.begin(),($1->value));
+					};
+// num_id			:	INTEGERS
+// 					{ $$ = new Node("num_id",$1->value); $$->children.push_back($1);} 
+// 					|
+// 					IDENTIFIER
+// 					{ $$ = new Node("dimlist",$1->value); $$->children.push_back($1);};
 
 %%
 
@@ -88,9 +143,12 @@ void yyerror(string s){
 	syntax_success = false;
 }
 
+
 int yywrap(){}
 
 int main(){
 	yyparse();
+	// cout<<"Total Errors: "<<error_count<<endl;
+	if(syntax_success) symtab.print();
 	return 0;
 }
