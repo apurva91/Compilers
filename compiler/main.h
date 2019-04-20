@@ -11,10 +11,11 @@ enum Type{
 	_none,
 	_simple,
 	_array,
-	_function
+	_function,
+	_boolean
 };
 
-const vector <string> _type = {"integer ", "real    ", "error   ", "none    ", "simple  ", "array   ", "function"};
+const vector <string> _type = {"integer ", "real    ", "error   ", "none    ", "simple  ", "array   ", "function","boolean "};
 
 template <class A> ostream& operator << (ostream& out, const vector<A> &v) {
 out << "[";
@@ -24,6 +25,7 @@ for(int i=0;i<v.size(); i++) {
 }
 return out << "]";
 }
+Type get_type(Type a, Type b);
 
 struct Node{
 	string type; 	//token class
@@ -31,7 +33,9 @@ struct Node{
 	vector <Node *> children;
 	int line_number;
 	Type data_type;
-	Node(string type, string value) : type(type), value(value), line_number(yylineno) {};
+	Node(string type, string value) : type(type), value(value), line_number(yylineno) {
+		data_type = _none;
+	};
 };
 
 struct Variable{
