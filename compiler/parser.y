@@ -18,6 +18,9 @@
 	int error_count = 0;
 	stringstream ic;
 	int var_num = 0;
+	map < int , int > patch_list;
+	// vector <pair <int , vector <  int > > > patch_list;
+
 %}
 
 %union{
@@ -26,7 +29,7 @@
 
 %token<node> SEMI EQUAL ADD SUB MUL DIV MOD GT LT GE LE EQ NE OR AND LP RP LB RB LS RS COMMA  INT VOID FLOAT FOR WHILE IF ELSE SWITCH CASE DEFAULT BREAK CONTINU RETURN INTEGERS FLOATING_POINTS IDENTIFIER
 
-%type<node> start statements statement decl body ifexp N M function_declaration res_id func_head param_list param param_list_main declaration_list d t l id_arr id_arr_asg dimlist expression sim_exp un_exp dm_exp log_exp and_exp rel_exp op1 op2 op3 term unop
+%type<node> start statements statement decl body level_increase whileexp ifexp N M function_declaration res_id func_head param_list param param_list_main declaration_list d t l id_arr id_arr_asg dimlist expression sim_exp un_exp dm_exp log_exp and_exp rel_exp op1 op2 op3 term unop
 
 %start start
 
@@ -43,56 +46,140 @@ start			:	declaration_list
 					};
 
 statements		:	statement
-					{ $$ = new Node("statements","");$$->children.push_back($1);} 
+					{ $$ = new Node("statements","");$$->children.push_back($1); 
+					// $$->quadlist = $1->quadlist; 
+					} 
 					|
 					statement statements
-					{$$ = new Node("statements","");$$->children.push_back($1);$$->children.push_back($2);}
+					{$$ = new Node("statements","");$$->children.push_back($1);$$->children.push_back($2);
+						// string s = ic.str();
+						// patch_quad(count(s.begin(),s.end(),'\n'), $1->quadlist);
+						// $$->quadlist = $1->quadlist;
+						// patch_quad(*min_element($2->quadlist.begin(),$2->quadlist.end()), $1->quadlist);
+						// $$->quadlist.insert($$->quadlist.end(), $2->quadlist.begin(), $2->quadlist.end());
+					}
 					;
 
 statement		:	d
-					{ $$ = new Node("statement","");$$->children.push_back($1);} 
+					{
+						$$ = new Node("statement","");$$->children.push_back($1);
+					} 
 					|
 					expression SEMI
-					{ $$ = new Node("statement","");$$->children.push_back($1);$$->children.push_back($2);}
+					{
+
+						$$ = new Node("statement","");$$->children.push_back($1);$$->children.push_back($2);
+					}
 					|
 					ifexp body N ELSE M body
+					{ 
+						$$ = new Node("statement","");
+						$$->children.push_back($1);
+						$$->children.push_back($2);
+						$$->children.push_back($3);
+						$$->children.push_back($4);
+						$$->children.push_back($5);
+						$$->children.push_back($6);
+						// $$->quadlist = $2->quadlist;
+						// $$->quadlist.insert($$->quadlist.end(), $3->quadlist.begin(), $3->quadlist.end());
+						// $$->quadlist.insert($$->quadlist.end(), $6->quadlist.begin(), $6->quadlist.end());
+						patch_quad($5->quadlist[0],$1->quadlist);
+						string s = ic.str();
+						patch_quad(count(s.begin(),s.end(),'\n'),$3->quadlist);
+
+
+					}
 					|
 					ifexp body
+					{
+						$$ = new Node("statement","");
+						$$->children.push_back($1);
+						$$->children.push_back($2);
+						$$->quadlist = $2->quadlist;
+						$$->quadlist.insert($$->quadlist.end(), $1->quadlist.begin(), $1->quadlist.end());
+						string s = ic.str();
+						patch_quad(count(s.begin(),s.end(),'\n'),$1->quadlist);
+					}
 					|
 					body
-					{ $$ = new Node("statement","");$$->children.push_back($1); }
+					{
+						$$ = new Node("statement","");$$->children.push_back($1);
+					}
+
 					|
 					RETURN id_arr_asg SEMI
 					{
+
+
 						$$ = new Node("statement","");$$->children.push_back($1);$$->children.push_back($2);
 						ic<<"return " + $2->var<<endl;
 					}
 					|
 					RETURN INTEGERS SEMI
 					{
+
 						$$ = new Node("statement","");$$->children.push_back($1);$$->children.push_back($2);
 						ic<<"return " + $2->value<<endl;
-					};
-ifexp			:	IF expression
+					}
+					|
+					whileexp body
 					{
-						// $$ = new Node("ifexp","");$$->children.push_back($1);$$->children.push_back($2);
-						// if($2->data_type == _boolean){
+						$$ = new Node("statement","");$$->children.push_back($1);$$->children.push_back($2);
+						string s = ic.str();
+						int x = count(s.begin(),s.end(),'\n');
+						patch_list[x] = stoi($1->var);
+						ic<<"goto "<<endl;
+						s = ic.str();
+						patch_quad(count(s.begin(),s.end(),'\n'),$1->quadlist);
 
-						// }
-						// else{
-						// 	yyerror("expecting boolean in the condition got " + $2->data_type);
-						// }
 					};
-N				:	{};
-M				:	{};
+whileexp		:	WHILE M LP expression RP
+					{
+						$$ = new Node("whileexp","");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);$$->children.push_back($4);$$->children.push_back($5);
+						string s = ic.str();
+						$$->quadlist.push_back(count(s.begin(),s.end(),'\n'));
+						$$->var = to_string($2->quadlist[0]);
+						ic<<"if "<<$4->var<<" <= 0 goto "<<endl;
+
+
+					};
+ifexp			:	IF LP expression RP
+					{
+						$$ = new Node("ifexp","");$$->children.push_back($1);
+						$$->children.push_back($2);
+						$$->children.push_back($3);
+						$$->children.push_back($4);
+						if($3->data_type == _boolean){
+							string s = ic.str();
+							$$->quadlist.push_back(count(s.begin(),s.end(),'\n'));
+							// cout<<$$->quadlist.back()<<endl;
+							ic<<"if "<<$3->var<<" <= 0 goto "<<endl;
+						}
+						else{
+							yyerror("expecting boolean in the condition got " + $2->data_type);
+						}
+					};
+N				:	{
+						$$ = new Node("N","");
+						string s = ic.str();
+						$$->quadlist.push_back(count(s.begin(),s.end(),'\n'));
+						ic<<"goto "<<endl;
+
+					};
+M				:	{
+						$$ = new Node("M","");
+						string s = ic.str();
+						$$->quadlist.push_back(count(s.begin(),s.end(),'\n'));
+					};
 
 body			:	level_increase LB statements RB
 					{
-						$$ = new Node("statement","");$$->children.push_back($2);$$->children.push_back($3);$$->children.push_back($4);	
+						$$ = new Node("body","");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);$$->children.push_back($4);	
 												// symtab.print();
 						symtab.decrease_level();
 					};
 level_increase	:	{
+						$$ = new Node("level_increase","");
 						symtab.increase_level();
 					};
 declaration_list:	declaration_list decl
@@ -122,7 +209,12 @@ decl			:	d
 
 function_declaration:	func_head body
 						{
-
+							$$ = new Node("function_declaration","");
+							$$->children.push_back($1);
+							$$->children.push_back($2);
+							string s = ic.str();
+							// cout<<$2->quadlist;
+							patch_quad(count(s.begin(),s.end(),'\n'),$2->quadlist);
 							symtab.decrease_level();
 							active_func_ptr = NULL;
 							ic<<"func end"<<endl;
@@ -258,7 +350,7 @@ id_arr			: 	IDENTIFIER
 							yyerror("Cant redeclare parameter in this scope");
 						}
 						else{
-							ptr = symtab.enter_var($1->value,_simple,_none);
+							ptr = symtab.enter_var($1->value,_array,_none);
 							ptr->dimlist = dimlist;
 							dimlist.clear();
 							patch.push_back(ptr);
@@ -334,8 +426,13 @@ id_arr_asg			: 	IDENTIFIER
 							$$->data_type = _error;
 						}
 						else{
+							if(ptr->type==_array){
+								yyerror("The variable " + ptr->id + " is an array, cant use array directly.");
+							}
+							else{	
 							$$->data_type = ptr->eletype;
 							if(ptr->level!=0) $$->var+="$" + active_func_ptr->id + "$" + to_string(ptr->level);
+							}
 						}
 
 					} 
@@ -453,7 +550,7 @@ rel_exp 		:	rel_exp op3 sim_exp
 								$$->data_type = _boolean;
 								Type tt = get_type($1->data_type, $3->data_type);
 								if(tt == _integer || tt == _real){
-									$$->data_type = tt;
+									// $$->data_type = ;
 									if($1->data_type==$3->data_type){
 										$$->var = get_var();
 										ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<$3->var<<endl;
@@ -588,6 +685,8 @@ un_exp 			: 	unop term
 						$$ = new Node("un_exp",$1->value + $2->value);$$->children.push_back($1);$$->children.push_back($2);
 						$$->var = get_var();
 						ic<<$$->var<<" = "<<$1->value<<" "<<$2->var<<endl;
+						ic<<$2->var<<" = "<<$$->var<<endl;;
+						$$->var = $2->var;
 						if($1->data_type == _integer || $1->data_type == _real){
 							$$->data_type = $1->data_type;
 						}
@@ -738,11 +837,24 @@ void printTree(Node *tree, string term) {
 	}
 	tree_file << tree->type;
 	if(tree->value != "") {
-		tree_file << "[" << tree->value << "]";
+		// tree_file << "[" << tree->value << "]";
 	}
-		tree_file << "[" << _type[tree->data_type] << "]";
-		tree_file << "[" << tree->var << "]";
+		// tree_file << "[" << _type[tree->data_type] << "]";
+		tree_file << "[" << tree->quadlist << "]";
 	tree_file << endl;
+	if(tree->children.size() > 6){
+		tree_line.push_back(true);
+		printTree(tree->children[6], term);
+		tree_line.pop_back();
+	}	if(tree->children.size() > 5){
+		tree_line.push_back(true);
+		printTree(tree->children[5], term);
+		tree_line.pop_back();
+	}	if(tree->children.size() > 4){
+		tree_line.push_back(true);
+		printTree(tree->children[4], term);
+		tree_line.pop_back();
+	}
 	if(tree->children.size() > 3){
 		tree_line.push_back(true);
 		printTree(tree->children[3], term);
@@ -772,6 +884,14 @@ int main(){
 	cout<<"Total Errors: "<<error_count<<endl;
 	if(syntax_success){
 		symtab.print();
+		for(auto it=patch_list.begin(); it!=patch_list.end(); it++){
+			cout<<it->first<<" "<<it->second<<endl;
+		}
+
+		ic.str(backpatch_quad(ic.str()));
+		ofstream out("inter.txt");
+		out<<ic.str();
+		out.close();
 		cout<<ic.str();
 	}
 	tree_file.open("tree.txt",fstream::out);

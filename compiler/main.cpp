@@ -27,7 +27,7 @@ extern SymbolTable symtab;
 
 	Variable * Function::enter_param(string name, Type type, Type eletype){
 		parameters.push_back(new Variable(name,type,eletype,1));
-		symtab.variables[1][name] = parameters.back();
+		symtab.variables[1][name] = parameters.back()	;
 		return parameters.back();
 		num_param++;
 	}
@@ -42,3 +42,46 @@ extern SymbolTable symtab;
 	
 // 	return NULL;
 // }
+// 
+// extern vector < pair < int , vector <int > > > patch_list;
+extern map <int , int> patch_list;
+
+void patch_quad(int a, vector <int> b){
+	for(int i=0; i<b.size(); i++){
+		patch_list[b[i]] = a;
+	}
+	// patch_list.push_back(make_pair(a,b));
+}
+
+std::vector<std::string> split(std::string str,std::string sep){
+    char* cstr=const_cast<char*>(str.c_str());
+    char* current;
+    std::vector<std::string> arr;
+    current=strtok(cstr,sep.c_str());
+    while(current!=NULL){
+        arr.push_back(current);
+        current=strtok(NULL,sep.c_str());
+    }
+    return arr;
+}
+
+string backpatch_quad(string s){
+		vector <string> p = split(s,"\n");
+		for(auto it=patch_list.begin(); it!=patch_list.end(); it++){
+			int j = it->second;
+			while(patch_list.count(j)!=0){
+				j = patch_list[j];
+			}
+			p[it->first] = p[it->first] + to_string(j+1);
+		}
+		// for(int i=0; i<patch_list.size(); i++){
+		// 	for(int j=0; j<patch_list[i].second.size(); j++){
+		// 		p[patch_list[i].second[j]] = p[patch_list[i].second[j]] + to_string(patch_list[i].first+1);
+		// 	}
+		// }
+		stringstream tmp;
+		for(int i=0; i<p.size(); i++){
+			tmp<<i+1<<": "<<p[i]<<endl;
+		}
+		return tmp.str();
+}

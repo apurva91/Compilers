@@ -1,16 +1,18 @@
-int c;
-int a[5,20,35], b;
+int c,g;
+int a[10], b;
 int main(){
-	a[5,3,6] = 2;
-	c = 5;
-	int d ;
-	int a[5];
-	a[5] = 4;
-	{
-		a[5] = 3;
-		int a[6];
-		a[9] = 20;
+	b = 5;
+	if(c==5){
+
+	while(b>0){
+		b = b -1;
+		while(b>2){
+			b = b +5;
+		}
 	}
-	return 5;
-	return a;
+	}
+	else{
+		b=-b;
+	}
+	b = 100;
 }

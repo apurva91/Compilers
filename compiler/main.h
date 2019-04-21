@@ -31,11 +31,16 @@ Type get_type(Type a, Type b);
 string get_var();
 string get_curr_var();
 bool is_number(string s);
+void patch_quad(int a, vector <int> b);
+vector<string> split(string str,string sep);
+string backpatch_quad(string str);
+
 
 struct Node{
 	string type; 	//token class
 	string value;	//token value
 	vector <Node *> children;
+	vector <int> quadlist;
 	int line_number;
 	string var;
 	Type data_type;
