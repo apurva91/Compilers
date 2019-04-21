@@ -29,7 +29,7 @@
 
 %token<node> SEMI EQUAL ADD SUB MUL DIV MOD GT LT GE LE EQ NE OR AND LP RP LB RB LS RS COMMA  INT VOID FLOAT FOR WHILE IF ELSE SWITCH CASE DEFAULT BREAK CONTINU RETURN INTEGERS FLOATING_POINTS IDENTIFIER
 
-%type<node> start statements statement decl body level_increase whileexp ifexp N M function_declaration res_id func_head param_list param param_list_main declaration_list d t l id_arr id_arr_asg dimlist expression sim_exp un_exp dm_exp log_exp and_exp rel_exp op1 op2 op3 term unop
+%type<node> start statements statement decl body intializer condition post_loop forexp level_increase whileexp ifexp N M function_declaration res_id func_head param_list param param_list_main declaration_list d t l id_arr id_arr_asg dimlist expression sim_exp un_exp dm_exp log_exp and_exp rel_exp op1 op2 op3 term unop
 
 %start start
 
@@ -57,9 +57,7 @@ statements		:	statement
 						// $$->quadlist = $1->quadlist;
 						// patch_quad(*min_element($2->quadlist.begin(),$2->quadlist.end()), $1->quadlist);
 						// $$->quadlist.insert($$->quadlist.end(), $2->quadlist.begin(), $2->quadlist.end());
-					}
-					;
-
+					};
 statement		:	d
 					{
 						$$ = new Node("statement","");$$->children.push_back($1);
@@ -132,15 +130,78 @@ statement		:	d
 						s = ic.str();
 						patch_quad(count(s.begin(),s.end(),'\n'),$1->quadlist);
 
+					}
+					|
+					forexp body
+					{
+						$$ = new Node("statement","");$$->children.push_back($1);$$->children.push_back($2);
+
+						vector <int> temp (1);
+						string s = ic.str();
+						temp[0] = count(s.begin(),s.end(),'\n');
+						ic<<"goto "<<endl;
+						patch_quad($1->quadlist[1],temp);
+						temp[0] = $1->quadlist[0]; 
+						patch_quad(count(s.begin(),s.end(),'\n')+1,temp);
+
+					}
+					;
+forexp			:	FOR LP intializer condition post_loop RP
+					{
+						$$ = new Node("forexp","");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);$$->children.push_back($4);$$->children.push_back($5);		
+						vector <int> temp (1);
+						temp[0] = $5->quadlist[0];
+						
+						$$->quadlist.push_back($4->quadlist[1]);
+						$$->quadlist.push_back($4->quadlist[2]);
+						
+						string s = ic.str(); 
+						temp[0] = $4->quadlist[0];
+						patch_quad(count(s.begin(),s.end(),'\n'),temp);
+
+						temp[0] = $5->quadlist[0];
+						patch_quad($3->quadlist[0],temp);
+
+					};
+
+intializer		:	expression SEMI
+					{
+						$$ = new Node("intializer","");$$->children.push_back($1);$$->children.push_back($2);
+						string s = ic.str();
+						$$->quadlist.push_back(count(s.begin(),s.end(),'\n'));
+					};
+condition		:	expression SEMI
+					{
+						$$ = new Node("condition","");$$->children.push_back($1);$$->children.push_back($2);
+						string s = ic.str();
+						$$->quadlist.push_back(count(s.begin(),s.end(),'\n'));
+						ic<<"if "<<$1->var<<" <= 0 goto "<<endl;
+						s = ic.str();
+						$$->quadlist.push_back(count(s.begin(),s.end(),'\n'));
+						ic<<"goto "<<endl;
+						s = ic.str();
+						$$->quadlist.push_back(count(s.begin(),s.end(),'\n'));
+					};
+post_loop		:	expression
+					{
+						$$ = new Node("post_loop","");$$->children.push_back($1);
+						string s = ic.str();
+						$$->quadlist.push_back(count(s.begin(),s.end(),'\n'));
+						ic<<"goto "<<endl;
+
 					};
 whileexp		:	WHILE M LP expression RP
 					{
-						$$ = new Node("whileexp","");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);$$->children.push_back($4);$$->children.push_back($5);
-						string s = ic.str();
-						$$->quadlist.push_back(count(s.begin(),s.end(),'\n'));
-						$$->var = to_string($2->quadlist[0]);
-						ic<<"if "<<$4->var<<" <= 0 goto "<<endl;
-
+						$$ = new Node("whileexp","");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);$$->children.push_back($4);$$->children.push_back($5);					
+							string s = ic.str();
+							$$->quadlist.push_back(count(s.begin(),s.end(),'\n'));
+							$$->var = to_string($2->quadlist[0]);
+						if($4->data_type == _boolean){
+							ic<<"if "<<$4->var<<" <= 0 goto "<<endl;
+						}
+						else{
+							yyerror("expecting boolean in the condition got " + $4->data_type);
+						}
 
 					};
 ifexp			:	IF LP expression RP
@@ -431,7 +492,7 @@ id_arr_asg			: 	IDENTIFIER
 							}
 							else{	
 							$$->data_type = ptr->eletype;
-							if(ptr->level!=0) $$->var+="$" + active_func_ptr->id + "$" + to_string(ptr->level);
+							if(ptr->level!=0) $$->var+= "$" + to_string(ptr->level);
 							}
 						}
 
@@ -448,7 +509,7 @@ id_arr_asg			: 	IDENTIFIER
 						string ht = "";
 
 						ptr = symtab.search_var($1->value,level);
-						if(ptr&&ptr->level!=0) ht += "$" + active_func_ptr->id + "$" + to_string(ptr->level);
+						if(ptr&&ptr->level!=0) ht +=  "$" + to_string(ptr->level);
 
 						if(ptr==NULL){
 							yyerror("Variable \033[1;31m" + $1->value + "\033[0m not declared.");							
