@@ -2,7 +2,8 @@ int c,g;
 int a[10], b;
 int main(){
 	int i;
-	for(i=0; i<5; i=i+1){
+
+	for(i=0; i<=5; i=i+1){
 		b = b +1;
 	}
 }

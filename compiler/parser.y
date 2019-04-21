@@ -169,9 +169,11 @@ intializer		:	expression SEMI
 						$$ = new Node("intializer","");$$->children.push_back($1);$$->children.push_back($2);
 						string s = ic.str();
 						$$->quadlist.push_back(count(s.begin(),s.end(),'\n'));
+
 					};
 condition		:	expression SEMI
 					{
+
 						$$ = new Node("condition","");$$->children.push_back($1);$$->children.push_back($2);
 						string s = ic.str();
 						$$->quadlist.push_back(count(s.begin(),s.end(),'\n'));
@@ -181,6 +183,9 @@ condition		:	expression SEMI
 						ic<<"goto "<<endl;
 						s = ic.str();
 						$$->quadlist.push_back(count(s.begin(),s.end(),'\n'));
+						if($1->data_type!=_boolean){
+							yyerror("expecting boolean in the condition got " + $1->data_type);
+						}
 					};
 post_loop		:	expression
 					{
