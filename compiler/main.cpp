@@ -25,13 +25,20 @@ bool is_number(string s){
 
 extern SymbolTable symtab;
 
-Variable * Function::search_var(string id, int level){
-	for(int i=level; i>=2; i--){
-		if(variables[i].count(id)!=0) return variables[i][id];
+	Variable * Function::enter_param(string name, Type type, Type eletype){
+		parameters.push_back(new Variable(name,type,eletype,1));
+		symtab.variables[1][name] = parameters.back();
+		return parameters.back();
+		num_param++;
 	}
-	Variable * ptr = search_param(id);
-	if(ptr) return ptr;
-	if(symtab.variables.count(id)!=0) return symtab.variables[id];
+
+// Variable * Function::search_var(string id, int level){
+// 	for(int i=level; i>=2; i--){
+// 		if(variables[i].count(id)!=0) return variables[i][id];
+// 	}
+// 	Variable * ptr = search_param(id);
+// 	if(ptr) return ptr;
+// 	if(symtab.variables.count(id)!=0) return symtab.variables[id];
 	
-	return NULL;
-}
+// 	return NULL;
+// }

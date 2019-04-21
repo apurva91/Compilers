@@ -9,7 +9,7 @@
 	void yyerror(string s);
 
 	Node * root;
-	int level = 0;
+	int level = -1;
 	SymbolTable symtab;
 
 	vector <Variable *> patch;
@@ -77,7 +77,7 @@ ifexp			:	IF expression
 					{
 						// $$ = new Node("ifexp","");$$->children.push_back($1);$$->children.push_back($2);
 						// if($2->data_type == _boolean){
-							
+
 						// }
 						// else{
 						// 	yyerror("expecting boolean in the condition got " + $2->data_type);
@@ -89,12 +89,11 @@ M				:	{};
 body			:	level_increase LB statements RB
 					{
 						$$ = new Node("statement","");$$->children.push_back($2);$$->children.push_back($3);$$->children.push_back($4);	
-						level--;
-						active_func_ptr->decrease_level();
+												// symtab.print();
+						symtab.decrease_level();
 					};
 level_increase	:	{
-						level++;
-						active_func_ptr->increase_level();
+						symtab.increase_level();
 					};
 declaration_list:	declaration_list decl
 					{
@@ -123,10 +122,9 @@ decl			:	d
 
 function_declaration:	func_head body
 						{
-							// active_func_ptr->print();
-							active_func_ptr->decrease_level();
+
+							symtab.decrease_level();
 							active_func_ptr = NULL;
-							level = 0;
 							ic<<"func end"<<endl;
 
 						};
@@ -174,9 +172,7 @@ res_id			:	t IDENTIFIER
 						else{
 							active_func_ptr = symtab.enter_func($2->value,$1->data_type);
 						}
-						active_func_ptr->increase_level();
-						level = 1;
-						active_func_ptr->increase_level();
+						symtab.increase_level();
 						ic<<"func begin "<<$2->value<<endl;
 					};
 param			:	t IDENTIFIER
@@ -193,7 +189,6 @@ param			:	t IDENTIFIER
 							}
 						}
 					};
-
 d				:	t l SEMI
 					{
 						$$ = new Node("d","");
@@ -235,30 +230,17 @@ id_arr			: 	IDENTIFIER
 					{
 						$$ = new Node("id_arr",$1->value);
 						$$->children.push_back($1);
-						if(active_func_ptr==NULL){
-							if(symtab.search_var($1->value)){
-								yyerror("Variable \033[1;31m" + $1->value + "\033[0m already declared.");
-								
-							}
-							else{
-								Variable * t = symtab.enter_var($1->value,_simple,_none);
-								patch.push_back(t);
-							}
+						Variable * ptr = symtab.search_var($1->value, level);
+						if(ptr&&ptr->level==level){
+							yyerror("Variable already declared in current scope");
+						}
+						else if(ptr&&level==2&&ptr->level==1){
+							yyerror("Cant redeclare parameter in this scope");
 						}
 						else{
-							Variable * ptr = active_func_ptr->search_var($1->value, level);
-
-							if(ptr&&ptr->level==level){
-								yyerror("Variable already declared in current scope");
-							}
-							else if(ptr&&level==2&&ptr->level==1){
-								yyerror("Cant redeclare parameter in this scope");
-							}
-							else{
-								ptr = active_func_ptr->enter_var($1->value,_simple,_none,level);
-								patch.push_back(ptr);
-							}
-						}						
+							ptr = symtab.enter_var($1->value,_simple,_none);
+							patch.push_back(ptr);
+						}
 					} 
 					|
 					IDENTIFIER LS dimlist RS
@@ -268,33 +250,18 @@ id_arr			: 	IDENTIFIER
 						$$->children.push_back($2);
 						$$->children.push_back($3);
 						$$->children.push_back($4);
-						if(active_func_ptr==NULL){
-							if(symtab.search_var($1->value)){
-								yyerror("Variable \033[1;31m" + $1->value + "\033[0m already declared.");
-								
-							}
-							else{
-								Variable * t = symtab.enter_var($1->value,_array,_none);
-								t->dimlist = dimlist;
-								dimlist.clear();
-								patch.push_back(t);
-							}
+						Variable * ptr = symtab.search_var($1->value, level);
+						if(ptr&&ptr->level==level){
+							yyerror("Variable already declared in current scope");
+						}
+						else if(ptr&&level==2&&ptr->level==1){
+							yyerror("Cant redeclare parameter in this scope");
 						}
 						else{
-							Variable * ptr = active_func_ptr->search_var($1->value, level);
-
-							if(ptr&&ptr->level==level){
-								yyerror("Variable already declared in current scope");
-							}
-							else if(ptr&&level==2&&ptr->level==1){
-								yyerror("Cant redeclare parameter in this scope");
-							}
-							else{
-								ptr = active_func_ptr->enter_var($1->value,_array,_none,level);
-								ptr->dimlist = dimlist;
-								dimlist.clear();
-								patch.push_back(ptr);
-							}
+							ptr = symtab.enter_var($1->value,_simple,_none);
+							ptr->dimlist = dimlist;
+							dimlist.clear();
+							patch.push_back(ptr);
 						}
 					};
 dimlist			:	INTEGERS
@@ -334,20 +301,8 @@ expression		:	id_arr_asg EQUAL expression
 						if($1->data_type==_error || $3->data_type==_error){
 								$$->data_type = _error;
 						}
-						else if(active_func_ptr==NULL){
-							if(symtab.search_var($1->value)){
-								Variable * ptr = symtab.search_var($1->value);
-								$$->data_type = ptr->eletype;
-								ic<<$1->var<<" = "<<$3->var<<endl;
-								$$->var = $3->var; 
-								if(get_type(ptr->eletype, $3->data_type)==_error){
-									yyerror("Mismatching datatypes of LHS and RHS: " + _type[$1->data_type] + " and " + _type[$3->data_type]);
-									$$->data_type = _error;
-								}
-							}
-						}
 						else{
-							Variable * ptr = active_func_ptr->search_var($1->value,level);
+							Variable * ptr = symtab.search_var($1->value,level);
 							if(ptr){
 								$$->data_type = ptr->eletype;
 								ic<<$1->var<<" = "<<$3->var<<endl;
@@ -373,26 +328,16 @@ id_arr_asg			: 	IDENTIFIER
 						$$ = new Node("id_arr",$1->value);
 						$$->children.push_back($1);
 						$$->var = "$" + $1->value;						
-						if(active_func_ptr==NULL){
-							Variable * ptr = symtab.search_var($1->value);
-							if(ptr==NULL){
-								yyerror("Variable \033[1;31m" + $1->value + "\033[0m not declared.");
-								
-							}
-							else{
-								$$->data_type = ptr->eletype;
-							}
+						Variable * ptr = symtab.search_var($1->value, level);
+						if(ptr==NULL){
+							yyerror("Variable \033[1;31m" + $1->value + "\033[0m not declared.");
+							$$->data_type = _error;
 						}
 						else{
-							Variable * ptr = active_func_ptr->search_var($1->value,level);
-							if(ptr){
-								$$->data_type = ptr->eletype;
-								if(ptr->level!=0) $$->var+="$" + active_func_ptr->id + "$" + to_string(ptr->level);
-							}
-							else{
-								yyerror("Variable \033[1;31m" + $1->value + "\033[0m not declared.");
-							}
+							$$->data_type = ptr->eletype;
+							if(ptr->level!=0) $$->var+="$" + active_func_ptr->id + "$" + to_string(ptr->level);
 						}
+
 					} 
 					|
 					IDENTIFIER LS dimlist RS
@@ -404,17 +349,12 @@ id_arr_asg			: 	IDENTIFIER
 						$$->children.push_back($4);
 						Variable * ptr;
 						string ht = "";
-						if(active_func_ptr==NULL){
-							ptr = symtab.search_var($1->value);
-						}
-						else{
-							ptr = active_func_ptr->search_var($1->value,level);
-							if(ptr&&ptr->level!=0) ht += "$" + active_func_ptr->id + "$" + to_string(ptr->level);
-						}
+
+						ptr = symtab.search_var($1->value,level);
+						if(ptr&&ptr->level!=0) ht += "$" + active_func_ptr->id + "$" + to_string(ptr->level);
 
 						if(ptr==NULL){
-							yyerror("Variable \033[1;31m" + $1->value + "\033[0m not declared.");
-							
+							yyerror("Variable \033[1;31m" + $1->value + "\033[0m not declared.");							
 							$$->data_type = _error;
 						}
 						else{
@@ -755,17 +695,14 @@ term 			:	LP expression RP
 					id_arr_asg
 					{
 						$$ = new Node("term",$1->value);$$->children.push_back($1);
-						if(active_func_ptr==NULL){
-							if(symtab.search_var($1->value)){
-								Variable * ptr = symtab.search_var($1->value);
-								$$->data_type = ptr->eletype;
-							}
-							else{
-								$$->data_type = _error;
-							}
+						Variable * ptr = symtab.search_var($1->value,level);
+						if(ptr){
+							$$->data_type = ptr->eletype;
 						}
-						$$->var = $1->var;
-						
+						else{
+							$$->data_type = _error;
+						}
+						$$->var = $1->var;	
 					};
 %%
 

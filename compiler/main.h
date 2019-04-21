@@ -64,7 +64,7 @@ struct Function{
 	int num_param;
 	string id;
 	vector <Variable * > parameters;
-	vector < map <string, Variable * > > variables;  //scope and id give Type 
+
 	Type return_type;
 
 	Function(string id, Type return_type): id(id), return_type(return_type){
@@ -76,15 +76,6 @@ struct Function{
 		for(int i=0; i<parameters.size(); i++){
 			parameters[i]->print();
 		}
-		if(variables.size()>1){	
-			cout<<"Variables: "<<endl;
-			cout<<"| id | type | element type  | level | dimlist |"<<endl;
-		}
-		for(int i=2; i<variables.size(); i++){
-			for(auto it=variables[i].begin(); it!= variables[i].end(); it++){
-				it->second->print();
-			}
-		}
 	}
 	Variable * search_param(string name){
 		for(int i=0; i<parameters.size(); i++){
@@ -92,31 +83,15 @@ struct Function{
 		}
 		return NULL;
 	}
-	Variable * enter_param(string name, Type type, Type eletype){
-		parameters.push_back(new Variable(name,type,eletype,1));
-		return parameters.back();
-		num_param++;
-	}
-	Variable * search_var(string id, int level);
-	Variable * enter_var(string id, Type type, Type eletype, int level){
-		variables[level][id] = new Variable(id,type,eletype,level);
-		return variables[level][id];
-	}
-	void increase_level(){
-		map <string, Variable *> tm;
-		tm.clear();
-		variables.push_back(tm);
-	}
-	void decrease_level(){
-		variables.pop_back();
-	}
+	Variable * enter_param(string name, Type type, Type eletype);
 	bool check_param_type(int pno, Type type){
 		return parameters[pno-1]->type==type;
 	}
 };
 
 struct SymbolTable{
-	map <string, Variable * > variables; // level 0 variables
+	// map <string, Variable * > variables; // level 0 variables
+	vector < map <string, Variable * > > variables;  //scope and id give Type 
 	map <string, Function *> functions;
 	Function * search_function(string id){
 		if(functions.count(id)!=0) return functions[id];
@@ -126,21 +101,34 @@ struct SymbolTable{
 		functions[id] = new Function(id,return_type);
 		return functions[id];
 	}
-	Variable * search_var(string id){
-		if(variables.count(id)!=0) return variables[id];
+	Variable * search_var(string id, int level){
+		for(int i=level; i>=0; i--){
+			if(variables[i].count(id)!=0) return variables[i][id];
+		}
 		return NULL;
 	}
 	Variable * enter_var(string id, Type type, Type eletype){
-		variables[id] = new Variable(id,type,eletype,level);
-		return variables[id];
+		variables[level][id] = new Variable(id,type,eletype,level);
+		return variables[level][id];
+	}
+	void increase_level(){
+		level++;
+		map <string, Variable *> tm;
+		tm.clear();
+		variables.push_back(tm);
+	}
+	void decrease_level(){
+		level--;
+		variables.pop_back();
 	}
 	void print(){
 		cout<<"Printing Symbol Table: "<<endl;
 		cout<<"Variables: "<<endl;
 		cout<<"| id | type | element type  | level | dimlist |"<<endl;
-
-		for(auto it=variables.begin(); it!= variables.end(); it++){
-			it->second->print();
+		for(int i=0; i<=level; i++){			
+			for(auto it=variables[i].begin(); it!= variables[i].end(); it++){
+				it->second->print();
+			}
 		}
 		cout<<"Functions: "<<endl;
 		cout<<"| id | type | num_param |"<<endl;
@@ -148,4 +136,5 @@ struct SymbolTable{
 			it->second->print();
 		}
 	}
+	SymbolTable(){increase_level();};
 };
