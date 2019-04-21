@@ -26,7 +26,7 @@
 
 %token<node> SEMI EQUAL ADD SUB MUL DIV MOD GT LT GE LE EQ NE OR AND LP RP LB RB LS RS COMMA  INT VOID FLOAT FOR WHILE IF ELSE SWITCH CASE DEFAULT BREAK CONTINU RETURN INTEGERS FLOATING_POINTS IDENTIFIER
 
-%type<node> start statements statement decl function_declaration res_id func_head param_list param param_list_main declaration_list d t l id_arr id_arr_asg dimlist expression sim_exp un_exp dm_exp log_exp and_exp rel_exp op1 op2 op3 term unop
+%type<node> start statements statement decl body ifexp N M function_declaration res_id func_head param_list param param_list_main declaration_list d t l id_arr id_arr_asg dimlist expression sim_exp un_exp dm_exp log_exp and_exp rel_exp op1 op2 op3 term unop
 
 %start start
 
@@ -55,12 +55,12 @@ statement		:	d
 					expression SEMI
 					{ $$ = new Node("statement","");$$->children.push_back($1);$$->children.push_back($2);}
 					|
-					level_increase LB statements RB
-					{
-						$$ = new Node("statement","");$$->children.push_back($2);$$->children.push_back($3);$$->children.push_back($4);	
-						level--;
-						active_func_ptr->decrease_level();
-					}
+					ifexp body N ELSE M body
+					|
+					ifexp body
+					|
+					body
+					{ $$ = new Node("statement","");$$->children.push_back($1); }
 					|
 					RETURN id_arr_asg SEMI
 					{
@@ -72,6 +72,25 @@ statement		:	d
 					{
 						$$ = new Node("statement","");$$->children.push_back($1);$$->children.push_back($2);
 						ic<<"return " + $2->value<<endl;
+					};
+ifexp			:	IF expression
+					{
+						// $$ = new Node("ifexp","");$$->children.push_back($1);$$->children.push_back($2);
+						// if($2->data_type == _boolean){
+							
+						// }
+						// else{
+						// 	yyerror("expecting boolean in the condition got " + $2->data_type);
+						// }
+					};
+N				:	{};
+M				:	{};
+
+body			:	level_increase LB statements RB
+					{
+						$$ = new Node("statement","");$$->children.push_back($2);$$->children.push_back($3);$$->children.push_back($4);	
+						level--;
+						active_func_ptr->decrease_level();
 					};
 level_increase	:	{
 						level++;
@@ -102,10 +121,9 @@ decl			:	d
 						$$->children.push_back($1);
 					};
 
-function_declaration:	func_head LB statements RB
+function_declaration:	func_head body
 						{
 							// active_func_ptr->print();
-							active_func_ptr->decrease_level();
 							active_func_ptr->decrease_level();
 							active_func_ptr = NULL;
 							level = 0;
@@ -120,8 +138,6 @@ func_head		:	res_id LP param_list_main RP
 						$$->children.push_back($2);
 						$$->children.push_back($3);
 						$$->children.push_back($4);
-						level = 2;
-						active_func_ptr->increase_level();
 					};
 param_list_main	:	param_list 
 					{
