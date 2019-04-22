@@ -1,3 +1,5 @@
+#include <stdlib.h>
+#include "stdio.h"
 int c,g;
 int a[10], b;
 int main(){

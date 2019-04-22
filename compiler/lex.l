@@ -25,7 +25,8 @@
 ("!="|"<>") { yylval.node = new Node("NE",yytext); return NE; }
 "||"		{ yylval.node = new Node("OR",yytext); return OR; } 	
 "&&"		{ yylval.node = new Node("AND",yytext); return AND; } 
-"("			{ yylval.node = new Node("LP",yytext); return LP; }	
+"("			{ yylval.node = new Node("LP",yytext); return LP; }
+
 ")"			{ yylval.node = new Node("RP",yytext); return RP; }	
 "{"			{ yylval.node = new Node("LB",yytext); return LB; }	
 "}"			{ yylval.node = new Node("RB",yytext); return RB; }	
@@ -51,7 +52,7 @@
 ([A-Za-z_]([A-Za-z0-9_])*) { yylval.node = new Node("IDENTIFIER",yytext); return IDENTIFIER; }
 ([ \t]+) 			{ }
 ([\n]) 				{ }
-
+"#"[ \t]*"include"[ \t]+(\<[A-za-z_\.\/0-9]+\>|\"[A-za-z_\.\/0-9]+\")	{yylval.node = new Node("LIBRARIES",yytext); return LIBRARIES; }
 .					{cerr<< "TOKEN CANNOT BE MATCHED :\t"<< yytext <<"\t"<<endl; syntax_success = false;}
 
 %%

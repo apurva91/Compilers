@@ -31,9 +31,9 @@
 	Node * node;
 }
 
-%token<node> SEMI EQUAL ADD SUB MUL DIV MOD GT LT GE LE EQ NE OR AND LP RP LB RB LS RS COMMA  INT VOID FLOAT FOR WHILE IF ELSE SWITCH CASE DEFAULT BREAK CONTINUE RETURN INTEGERS FLOATING_POINTS IDENTIFIER 
+%token<node> SEMI EQUAL ADD SUB MUL DIV MOD GT LT GE LE EQ NE OR AND LP RP LB RB LS RS LIBRARIES COMMA  INT VOID FLOAT FOR WHILE IF ELSE SWITCH CASE DEFAULT BREAK CONTINUE RETURN INTEGERS FLOATING_POINTS IDENTIFIER 
 
-%type<node> start statements statement decl body intializer paramslist_main paramslist condition post_loop forexp level_increase whileexp ifexp N M function_declaration res_id func_head param_list param param_list_main declaration_list d t l id_arr id_arr_asg dimlist expression sim_exp un_exp dm_exp log_exp and_exp rel_exp op1 op2 op3 term unop
+%type<node> start statements statement decl body intializer libraries paramslist_main paramslist condition post_loop forexp level_increase whileexp ifexp N M function_declaration res_id func_head param_list param param_list_main declaration_list d t l id_arr id_arr_asg dimlist expression sim_exp un_exp dm_exp log_exp and_exp rel_exp op1 op2 op3 term unop
 
 %start start
 
@@ -42,13 +42,16 @@
 
 %%
 
-start			:	declaration_list 
+start			:	libraries declaration_list 
 					{
-						$$ = new Node("start",""); 
-						$$->children.push_back($1); 
+						$$ = new Node("start","");  
+						$$->children.push_back($2); 
 						root = $$; 
 					};
-
+libraries		:	{}
+					|
+					LIBRARIES libraries
+					{};
 statements		:	statement
 					{ $$ = new Node("statements","");$$->children.push_back($1); 
 					// $$->quadlist = $1->quadlist; 
