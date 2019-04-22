@@ -1,10 +1,6 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-extern int yylineno;
-extern int level;
-extern int var_num;
-
 enum Type{
 	_integer,
 	_real,
@@ -13,28 +9,33 @@ enum Type{
 	_simple,
 	_array,
 	_function,
-	_boolean
+	_boolean,
+	_void
 };
 
-const vector <string> _type = {"integer ", "real    ", "error   ", "none    ", "simple  ", "array   ", "function","boolean "};
+extern int level;
+extern int var_num;
+extern int yylineno;
+const vector <string> _type = {"integer ", "real    ", "error   ", "none    ", "simple  ", "array   ", "function","boolean ","void    "};
 
-template <class A> ostream& operator << (ostream& out, const vector<A> &v) {
-out << "[";
-for(int i=0;i<v.size(); i++) {
-	if(i) out << ", ";
-	out << v[i];
-}
-return out << "]";
-}
 
-Type get_type(Type a, Type b);
 string get_var();
 string get_curr_var();
 bool is_number(string s);
+Type get_type(Type a, Type b);
+string backpatch_quad(string str);
 void patch_quad(int a, vector <int> b);
 vector<string> split(string str,string sep);
-string backpatch_quad(string str);
+void ReplaceStringInPlace(string& subject, const string& search,const string& replace);
 
+template <class A> ostream& operator << (ostream& out, const vector<A> &v) {
+	out << "[";
+	for(int i=0;i<v.size(); i++) {
+		if(i) out << ", ";
+		out << v[i];
+	}
+	return out << "]";
+}
 
 struct Node{
 	string type; 	//token class
@@ -90,7 +91,7 @@ struct Function{
 	}
 	Variable * enter_param(string name, Type type, Type eletype);
 	bool check_param_type(int pno, Type type){
-		return parameters[pno-1]->type==type;
+		return parameters[pno]->type==type;
 	}
 };
 

@@ -13,7 +13,9 @@
 	SymbolTable symtab;
 
 	vector <Variable *> patch;
+	vector < pair < string , Type > > params;
 	Function * active_func_ptr = NULL;
+	Function * call_func_ptr = NULL;
 	vector <string> dimlist;
 	int error_count = 0;
 	stringstream ic;
@@ -29,7 +31,7 @@
 
 %token<node> SEMI EQUAL ADD SUB MUL DIV MOD GT LT GE LE EQ NE OR AND LP RP LB RB LS RS COMMA  INT VOID FLOAT FOR WHILE IF ELSE SWITCH CASE DEFAULT BREAK CONTINU RETURN INTEGERS FLOATING_POINTS IDENTIFIER
 
-%type<node> start statements statement decl body intializer condition post_loop forexp level_increase whileexp ifexp N M function_declaration res_id func_head param_list param param_list_main declaration_list d t l id_arr id_arr_asg dimlist expression sim_exp un_exp dm_exp log_exp and_exp rel_exp op1 op2 op3 term unop
+%type<node> start statements statement decl body intializer paramslist_main paramslist condition post_loop forexp level_increase whileexp ifexp N M function_declaration res_id func_head param_list param param_list_main declaration_list d t l id_arr id_arr_asg dimlist expression sim_exp un_exp dm_exp log_exp and_exp rel_exp op1 op2 op3 term unop
 
 %start start
 
@@ -67,6 +69,9 @@ statement		:	d
 					{
 
 						$$ = new Node("statement","");$$->children.push_back($1);$$->children.push_back($2);
+						if($1->var.rfind("_term",0)==0){
+							yyerror("Invalid syntax, just a term mentioned");
+						}
 					}
 					|
 					ifexp body N ELSE M body
@@ -169,6 +174,9 @@ intializer		:	expression SEMI
 						$$ = new Node("intializer","");$$->children.push_back($1);$$->children.push_back($2);
 						string s = ic.str();
 						$$->quadlist.push_back(count(s.begin(),s.end(),'\n'));
+						if($1->var.rfind("_term",0)==0){
+							yyerror("Invalid syntax, just a term mentioned");
+						}
 
 					};
 condition		:	expression SEMI
@@ -193,6 +201,9 @@ post_loop		:	expression
 						string s = ic.str();
 						$$->quadlist.push_back(count(s.begin(),s.end(),'\n'));
 						ic<<"goto "<<endl;
+						if($1->var.rfind("_term",0)==0){
+							yyerror("Invalid syntax, just a term mentioned");
+						}
 
 					};
 whileexp		:	WHILE M LP expression RP
@@ -463,6 +474,9 @@ expression		:	id_arr_asg EQUAL expression
 							Variable * ptr = symtab.search_var($1->value,level);
 							if(ptr){
 								$$->data_type = ptr->eletype;
+								if($3->var.rfind("_term",0)==0){
+									$3->var = $3->var.replace(0,5,"");
+								}
 								ic<<$1->var<<" = "<<$3->var<<endl;
 								$$->var = $3->var; 
 								if(get_type(ptr->eletype, $3->data_type)==_error){
@@ -478,7 +492,7 @@ expression		:	id_arr_asg EQUAL expression
 						$$ = new Node("expression","");
 						$$->data_type = $1->data_type;
 						$$->children.push_back($1);		
-						$$->var = $1->var;				
+						$$->var = "_term" + $1->var;				
 					};
 
 id_arr_asg			: 	IDENTIFIER
@@ -559,7 +573,7 @@ log_exp 		:	log_exp OR and_exp
 							}
 							else{
 								$$->data_type = _boolean;
-								$$->var = get_var();
+								$$->var =  get_var();
 								ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<$3->var<<endl;	
 							}
 						}
@@ -624,13 +638,13 @@ rel_exp 		:	rel_exp op3 sim_exp
 									else{
 										if($1->data_type==_real){
 											string tv = get_var();
-											ic<<tv<<" = cnvrt_float("<<$1->var<<")\n";
+											ic<<tv<<" = cnvrt_to_float("<<$1->var<<")\n";
 											$$->var = get_var();
 											ic<<$$->var<<" = "<<tv<<" "<<$2->value<<" "<<$3->var<<endl;
 										}
 										else{
 											string tv = get_var();
-											ic<<tv<<" = cnvrt_float("<<$3->var<<")\n";
+											ic<<tv<<" = cnvrt_to_float("<<$3->var<<")\n";
 											$$->var = get_var();
 											ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<tv<<endl;
 										}
@@ -666,13 +680,13 @@ sim_exp 		:	sim_exp op1 dm_exp
 								else{
 									if($1->data_type==_real){
 										string tv = get_var();
-										ic<<tv<<" = cnvrt_float("<<$1->var<<")\n";
+										ic<<tv<<" = cnvrt_to_float("<<$1->var<<")\n";
 										$$->var = get_var();
 										ic<<$$->var<<" = "<<tv<<" "<<$2->value<<" "<<$3->var<<endl;
 									}
 									else{
 										string tv = get_var();
-										ic<<tv<<" = cnvrt_float("<<$3->var<<")\n";
+										ic<<tv<<" = cnvrt_to_float("<<$3->var<<")\n";
 										$$->var = get_var();
 										ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<tv<<endl;
 									}
@@ -712,13 +726,13 @@ dm_exp 			: 	dm_exp op2 un_exp
 								else{
 									if($1->data_type==_real){
 										string tv = get_var();
-										ic<<tv<<" = cnvrt_float("<<$1->var<<")\n";
+										ic<<tv<<" = cnvrt_to_float("<<$1->var<<")\n";
 										$$->var = get_var();
 										ic<<$$->var<<" = "<<tv<<" "<<$2->value<<" "<<$3->var<<endl;
 									}
 									else{
 										string tv = get_var();
-										ic<<tv<<" = cnvrt_float("<<$3->var<<")\n";
+										ic<<tv<<" = cnvrt_to_float("<<$3->var<<")\n";
 										$$->var = get_var();
 										ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<tv<<endl;
 									}
@@ -857,6 +871,52 @@ term 			:	LP expression RP
 						$$->var = $1->value;
 					}
 					|
+					IDENTIFIER LP paramslist RP
+					{
+						$$ = new Node("term",$1->value);
+						$$->children.push_back($1);
+						$$->children.push_back($2);
+						$$->children.push_back($3);
+						$$->children.push_back($4);
+						call_func_ptr = symtab.search_function($1->value);
+						if(call_func_ptr){
+							if(call_func_ptr->num_param==params.size()){
+								for(int i=0; i<params.size(); i++){
+									if(params[i].second!=call_func_ptr->parameters[i]->eletype){
+										if(params[i].second == _real&&call_func_ptr->parameters[i]->eletype == _integer){
+											ic<<get_var()<<" = cnvrt_to_int("+params[i].first+")"<<endl;
+											params[i].first = get_curr_var();
+										}
+										else if(params[i].second == _integer&&call_func_ptr->parameters[i]->eletype == _real){
+											ic<<get_var()<<" = cnvrt_to_float("+params[i].first+")"<<endl;
+											params[i].first = get_curr_var();										
+										}
+										else{
+											yyerror("Function's " + to_string(i+1) + " parameter is " + _type[call_func_ptr->parameters[i]->eletype] + " while passed is " + _type[params[i].second]);
+										}
+									}									
+								}
+								for(int i=0; i<params.size(); i++){
+									ic<<"param "<<params[i].first<<endl;
+								}
+								$$->var = get_var();
+								ic<<"refparam "<<$$->var<<endl;
+								ic<<"call "<<call_func_ptr->id<<", "<<params.size()+1<<endl;
+								$$->data_type = call_func_ptr->return_type;
+							}
+							else{
+								$$->data_type = _error;
+								yyerror("Function " + call_func_ptr->id + " expects " + to_string(call_func_ptr->num_param) + " but got " + to_string(params.size()));
+							}
+						}
+						else{
+								$$->data_type = _error;
+							yyerror("Function " + $1->value + " not declared.");
+						}
+						call_func_ptr = NULL;	
+						params.clear();
+					}
+					|
 					id_arr_asg
 					{
 						$$ = new Node("term",$1->value);$$->children.push_back($1);
@@ -869,6 +929,32 @@ term 			:	LP expression RP
 						}
 						$$->var = $1->var;	
 					};
+
+paramslist			:	{ 
+							$$ = new Node("paramslist","");
+						}
+						|
+						paramslist_main
+						{
+							$$ = new Node("paramslist","");
+							$$->children.push_back($1);
+							
+						};
+paramslist_main		:	expression COMMA paramslist_main
+						{
+							$$ = new Node("paramslist_main","");
+							$$->children.push_back($1);
+							$$->children.push_back($2);
+							$$->children.push_back($3);
+							params.push_back(make_pair($1->var,$1->data_type));
+						}
+						|
+						expression
+						{
+							$$ = new Node("paramslist_main","");
+							$$->children.push_back($1);
+							params.push_back(make_pair($1->var,$1->data_type));
+						};
 %%
 
 bool syntax_success = true;
@@ -948,6 +1034,9 @@ int yywrap(){}
 int main(){
 	yyparse();
 	cout<<"Total Errors: "<<error_count<<endl;
+	string s = ic.str();
+	ReplaceStringInPlace(s,"_term","");
+	ic.str(s);
 	if(syntax_success){
 		symtab.print();
 		for(auto it=patch_list.begin(); it!=patch_list.end(); it++){
