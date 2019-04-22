@@ -1,8 +1,0 @@
-int c,g;
-int a[10], b;
-int main(){
-	int i;
-	for(i=b*5;i<5; i=i+1){
-		b=b*5;
-	}
-}

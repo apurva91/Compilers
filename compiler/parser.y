@@ -22,14 +22,16 @@
 	int var_num = 0;
 	map < int , int > patch_list;
 	// vector <pair <int , vector <  int > > > patch_list;
-
+	int loop_count = 0;
+	vector < vector <int>  > breaks;
+	vector < vector <int>  > continues;
 %}
 
 %union{
 	Node * node;
 }
 
-%token<node> SEMI EQUAL ADD SUB MUL DIV MOD GT LT GE LE EQ NE OR AND LP RP LB RB LS RS COMMA  INT VOID FLOAT FOR WHILE IF ELSE SWITCH CASE DEFAULT BREAK CONTINU RETURN INTEGERS FLOATING_POINTS IDENTIFIER
+%token<node> SEMI EQUAL ADD SUB MUL DIV MOD GT LT GE LE EQ NE OR AND LP RP LB RB LS RS COMMA  INT VOID FLOAT FOR WHILE IF ELSE SWITCH CASE DEFAULT BREAK CONTINUE RETURN INTEGERS FLOATING_POINTS IDENTIFIER 
 
 %type<node> start statements statement decl body intializer paramslist_main paramslist condition post_loop forexp level_increase whileexp ifexp N M function_declaration res_id func_head param_list param param_list_main declaration_list d t l id_arr id_arr_asg dimlist expression sim_exp un_exp dm_exp log_exp and_exp rel_exp op1 op2 op3 term unop
 
@@ -89,8 +91,6 @@ statement		:	d
 						patch_quad($5->quadlist[0],$1->quadlist);
 						string s = ic.str();
 						patch_quad(count(s.begin(),s.end(),'\n'),$3->quadlist);
-
-
 					}
 					|
 					ifexp body
@@ -102,6 +102,36 @@ statement		:	d
 						$$->quadlist.insert($$->quadlist.end(), $1->quadlist.begin(), $1->quadlist.end());
 						string s = ic.str();
 						patch_quad(count(s.begin(),s.end(),'\n'),$1->quadlist);
+					}
+					|
+					BREAK SEMI
+					{
+						$$ = new Node("statement","");
+						$$->children.push_back($1);
+						$$->children.push_back($2);
+						if(loop_count==0){
+							yyerror("Illegal use of break statement.");
+						}
+						else{
+							string s = ic.str();
+							breaks[loop_count-1].push_back(count(s.begin(),s.end(),'\n'));
+							ic<<"goto "<<endl;
+						}
+					}
+					|
+					CONTINUE SEMI
+					{
+						$$ = new Node("statement","");
+						$$->children.push_back($1);
+						$$->children.push_back($2);
+						if(loop_count==0){
+							yyerror("Illegal use of continue statement.");
+						}
+						else{
+							string s = ic.str();
+							continues[loop_count-1].push_back(count(s.begin(),s.end(),'\n'));
+							ic<<"goto "<<endl;
+						}
 					}
 					|
 					body
@@ -134,7 +164,11 @@ statement		:	d
 						ic<<"goto "<<endl;
 						s = ic.str();
 						patch_quad(count(s.begin(),s.end(),'\n'),$1->quadlist);
-
+						loop_count--;
+						patch_quad(count(s.begin(),s.end(),'\n'),breaks.back());
+						patch_quad(patch_list[x],continues.back());
+						breaks.pop_back();
+						continues.pop_back();
 					}
 					|
 					forexp body
@@ -148,7 +182,11 @@ statement		:	d
 						patch_quad($1->quadlist[1],temp);
 						temp[0] = $1->quadlist[0]; 
 						patch_quad(count(s.begin(),s.end(),'\n')+1,temp);
-
+						patch_quad(count(s.begin(),s.end(),'\n')+1,breaks.back());
+						patch_quad($1->quadlist[1],continues.back());
+						breaks.pop_back();
+						continues.pop_back();
+						loop_count--;
 					}
 					;
 forexp			:	FOR LP intializer condition post_loop RP
@@ -157,16 +195,18 @@ forexp			:	FOR LP intializer condition post_loop RP
 						vector <int> temp (1);
 						temp[0] = $5->quadlist[0];
 						
-						$$->quadlist.push_back($4->quadlist[1]);
+						$$->quadlist.push_back($4->quadlist[0]);
 						$$->quadlist.push_back($4->quadlist[2]);
 						
 						string s = ic.str(); 
-						temp[0] = $4->quadlist[0];
+						temp[0] = $4->quadlist[1];
 						patch_quad(count(s.begin(),s.end(),'\n'),temp);
 
 						temp[0] = $5->quadlist[0];
 						patch_quad($3->quadlist[0],temp);
-
+						breaks.push_back(vector <int> (0));
+						continues.push_back(vector <int> (0));
+						loop_count++;
 					};
 
 intializer		:	expression SEMI
@@ -218,6 +258,10 @@ whileexp		:	WHILE M LP expression RP
 						else{
 							yyerror("expecting boolean in the condition got " + $4->data_type);
 						}
+							breaks.push_back(vector <int> (0));
+							continues.push_back(vector <int> (0));
+							loop_count++;
+
 
 					};
 ifexp			:	IF LP expression RP
@@ -474,14 +518,27 @@ expression		:	id_arr_asg EQUAL expression
 							Variable * ptr = symtab.search_var($1->value,level);
 							if(ptr){
 								$$->data_type = ptr->eletype;
-								if($3->var.rfind("_term",0)==0){
-									$3->var = $3->var.replace(0,5,"");
-								}
-								ic<<$1->var<<" = "<<$3->var<<endl;
-								$$->var = $3->var; 
 								if(get_type(ptr->eletype, $3->data_type)==_error){
 									yyerror("Mismatching datatypes of LHS and RHS: " + _type[$1->data_type] + " and " + _type[$3->data_type]);
 									$$->data_type = _error;
+								}
+								else{
+									if($3->var.rfind("_term",0)==0){
+										$3->var = $3->var.replace(0,5,"");
+									}
+									string v = $3->var;
+									if(ptr->eletype != $3->data_type){
+										if($3->data_type==_real){
+											ic<<get_var()<<" = cnvrt_to_int(" + $3->var + ")"<<endl;
+											v = get_curr_var();
+										}
+										else if($3->data_type==_integer){
+											ic<<get_var()<<" = cnvrt_to_float(" + $3->var + ")"<<endl;
+											v = get_curr_var();
+										}
+									}
+									ic<<$1->var<<" = "<<v<<endl;
+									$$->var = v; 
 								}
 							}
 						}
@@ -1039,10 +1096,9 @@ int main(){
 	ic.str(s);
 	if(syntax_success){
 		symtab.print();
-		for(auto it=patch_list.begin(); it!=patch_list.end(); it++){
-			cout<<it->first<<" "<<it->second<<endl;
-		}
-
+		// for(auto it=patch_list.begin(); it!=patch_list.end(); it++){
+		// 	cout<<it->first<<" "<<it->second<<endl;
+		// }
 		ic.str(backpatch_quad(ic.str()));
 		ofstream out("inter.txt");
 		out<<ic.str();

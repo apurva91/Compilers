@@ -43,7 +43,7 @@
 "case"		{ yylval.node = new Node("CASE",yytext); return CASE; }
 "default"	{ yylval.node = new Node("DEFAULT",yytext); return DEFAULT; }
 "break"		{ yylval.node = new Node("BREAK",yytext); return BREAK; }  
-"continue"	{ yylval.node = new Node("CONTINUE",yytext); return CONTINU; }
+"continue"	{ yylval.node = new Node("CONTINUE",yytext); return CONTINUE; }
 "return"	{ yylval.node = new Node("RETURN",yytext); return RETURN; } 
 
 ([0-9]+)			{ yylval.node = new Node("INTEGERS",yytext); return INTEGERS; }
