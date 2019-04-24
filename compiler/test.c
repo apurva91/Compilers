@@ -1,23 +1,25 @@
-#include <stdlib.h>
-#include "stdio.h"
-int c,g;
-float f;
+#include <stdio.h>
 
-float p[20];
-int a[10], b;
-int main(){
-	int i ;
-	while(i>5){
-		i=i+1;	
-		switch(i){
-			case 1: b = 4;
-			break;
-			case 2: case 3:
-			break;
-			default:
-			continue;
-		}
-		i=i-1;	
+int a[10][25];
+
+int fib(int x){
+	if(x==1){
+		return 1;
 	}
-	i = 60;
+	if(x==0){
+		return 0;
+	}
+	else{
+		return fib(x-1) + fib(x-2);	
+	}
+}
+
+
+int main(){
+	int i,j;
+	for(i=0; i<10; i=i+1){
+		for(j=0; j<25; j=j+1){
+			a[i][j] = i*j;
+		}
+	}
 }

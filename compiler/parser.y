@@ -37,7 +37,7 @@
 
 %token<node> SEMI EQUAL ADD SUB MUL DIV MOD GT LT GE LE EQ NE OR AND LP RP MAIN LB RB LS RS COLON LIBRARIES COMMA  INT VOID FLOAT FOR WHILE IF ELSE SWITCH CASE DEFAULT BREAK CONTINUE RETURN INTEGERS FLOATING_POINTS IDENTIFIER 
 
-%type<node> start statements statement decl body intializer libraries switchexp switch_body case_st case_list case_label case_labels INIT paramslist_main paramslist condition post_loop forexp level_increase whileexp ifexp N M function_declaration res_id func_head param_list param param_list_main declaration_list d t l id_arr id_arr_asg dimlist expression sim_exp un_exp dm_exp log_exp and_exp rel_exp op1 op2 op3 term unop
+%type<node> start statements statement decl body intializer libraries  switchexp dimlist_var switch_body case_st case_list case_label case_labels INIT paramslist_main paramslist condition post_loop forexp level_increase whileexp ifexp N M function_declaration res_id func_head param_list param param_list_main declaration_list d t l id_arr id_arr_asg dimlist expression sim_exp un_exp dm_exp log_exp and_exp rel_exp op1 op2 op3 term unop
 
 %start start
 
@@ -170,19 +170,13 @@ statement		:	d
 						$$ = new Node("statement","");$$->children.push_back($1);
 					}
 					|
-					RETURN id_arr_asg SEMI
+					RETURN expression SEMI
 					{
-
-
 						$$ = new Node("statement","");$$->children.push_back($1);$$->children.push_back($2);
 						ic<<"return " + $2->var<<endl;
-					}
-					|
-					RETURN INTEGERS SEMI
-					{
-
-						$$ = new Node("statement","");$$->children.push_back($1);$$->children.push_back($2);
-						ic<<"return " + $2->value<<endl;
+						if(active_func_ptr->return_type!=$2->data_type){
+							yyerror("Returning illegal data type");
+						}
 					}
 					|
 					whileexp body
@@ -247,7 +241,7 @@ statement		:	d
 						if(continues[loop_count-1].size()!=0) {
 							continues[loop_count-1-1].insert(continues[loop_count-1-1].end(),continues[loop_count-1].begin(), continues[loop_count-1].end());
 						}
-								s = ic.str();
+						s = ic.str();
 						patch_quad(count(s.begin(),s.end(),'\n'),breaks[loop_count-1]);
 						symtab.decrease_level();
 						breaks.pop_back();
@@ -563,6 +557,17 @@ d				:	t l SEMI
 						$$->children.push_back($2);
 						$$->children.push_back($3);
 						for(int i=0; i<patch.size(); i++){
+							if(patch[i]->type==_array){
+								if($1->data_type==_real) ic<<"f.";
+								if($1->data_type==_integer) ic<<"i.";
+									int prod = 1;
+									for(int j=0; j<patch[i]->dimlist.size(); j++){
+										prod*=stoi(patch[i]->dimlist[j]);
+									}
+									ic<<patch[i]->id<<"["<<prod<<"]";
+								if(level!=0) ic<<"." + to_string(level) + "." + active_func_ptr->id;
+								ic<<endl;
+							}
 							patch[i]->eletype = $1->data_type;
 						}
 						patch.clear();
@@ -640,23 +645,55 @@ dimlist			:	INTEGERS
 						// }
 						// ic<<get_var()<<" = "<<$1->var<<endl;
 						// dimlist.insert(dimlist.begin(),(get_curr_var()));
-						dimlist.insert(dimlist.begin(),$1->value);
+						// dimlist.insert(dimlist.begin(),$1->value);
+						dimlist.push_back($1->value);
 
 					} 
 					| 
-					INTEGERS COMMA dimlist
+					dimlist RS LS INTEGERS
 					{
 						$$ = new Node("dimlist",""); 
 						$$->children.push_back($1);
-						$$->children.push_back($2);
-						$$->children.push_back($3);
+						// $$->children.push_back($2);
+						$$->children.push_back($4);
 						// if($1->data_type!=_integer){
 						// 	yyerror("Arrays can only be indexed using integers.");
 						// }
 						// ic<<get_var()<<" = "<<$1->var<<endl;
 						// dimlist.insert(dimlist.begin(),(get_curr_var()));
-						dimlist.insert(dimlist.begin(),$1->value);
+						dimlist.push_back($4->value);
 					};
+
+dimlist_var			:	expression
+					{ 
+						$$ = new Node("dimlist","");
+						$$->children.push_back($1);
+						if($1->data_type!=_integer){
+							yyerror("Arrays can only be indexed using integers.");
+						}
+						// ic<<get_var()<<" = "<<$1->var<<endl;
+						// dimlist.insert(dimlist.begin(),(get_curr_var()))
+						dimlist.push_back($1->var);
+						// 
+						// dimlist.insert(dimlist.begin(),$1->value);
+
+					} 
+					| 
+					dimlist_var RS LS expression
+					{
+						$$ = new Node("dimlist",""); 
+						$$->children.push_back($1);
+						// $$->children.push_back($2);
+						$$->children.push_back($4);
+						if($4->data_type!=_integer){
+							yyerror("Arrays can only be indexed using integers.");
+						}
+						// ic<<get_var()<<" = "<<$1->var<<endl;
+						// dimlist.insert(dimlist.begin(),(get_curr_var()));
+						dimlist.push_back($4->var);
+						// dimlist.insert(dimlist.begin(),$1->value);
+					};
+
 //variable or an array element assigned an expression
 //						
 expression		:	id_arr_asg EQUAL expression
@@ -734,7 +771,7 @@ id_arr_asg			: 	IDENTIFIER
 
 					} 
 					|
-					IDENTIFIER LS dimlist RS
+					IDENTIFIER LS dimlist_var RS
 					{
 						$$ = new Node("id_arr",$1->value);
 						$$->children.push_back($1);
@@ -1285,8 +1322,8 @@ int main(){
 	string s = ic.str();
 	ReplaceStringInPlace(s,"_term","");
 	ic.str(s);
-	if(syntax_success){
 		symtab.print();
+	if(syntax_success){
 		// for(auto it=patch_list.begin(); it!=patch_list.end(); it++){
 		// 	cout<<it->first<<" "<<it->second<<endl;
 		// }

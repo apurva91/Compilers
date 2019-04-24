@@ -28,8 +28,8 @@ extern SymbolTable symtab;
 	Variable * Function::enter_param(string name, Type type, Type eletype){
 		parameters.push_back(new Variable(name,type,eletype,1));
 		symtab.variables[1][name] = parameters.back()	;
-		return parameters.back();
 		num_param++;
+		return parameters.back();
 	}
 
 // Variable * Function::search_var(string id, int level){
