@@ -11,6 +11,7 @@
 %%
 
 ";"			{ yylval.node = new Node("SEMI",yytext); return SEMI; }
+":"			{ yylval.node = new Node("COLON",yytext); return COLON; }
 "="			{ yylval.node = new Node("EQUAL",yytext); return EQUAL; }
 "+"			{ yylval.node = new Node("ADD",yytext); return ADD; }
 "-"			{ yylval.node = new Node("SUB",yytext); return SUB; }
@@ -35,6 +36,7 @@
 ","			{ yylval.node = new Node("COMMA",yytext); return COMMA; } 
 "int"		{ yylval.node = new Node("INT",yytext); return INT; }	
 "void"		{ yylval.node = new Node("VOID",yytext); return VOID; }
+"main"		{ yylval.node = new Node("MAIN",yytext); return MAIN; }
 "float"		{ yylval.node = new Node("FLOAT",yytext); return FLOAT; } 
 "for"		{ yylval.node = new Node("FOR",yytext); return FOR; }	
 "while"		{ yylval.node = new Node("WHILE",yytext); return WHILE; }

@@ -21,19 +21,23 @@
 	stringstream ic;
 	int var_num = 0;
 	map < int , int > patch_list;
+	map <int , int> patch_listf;
 	// vector <pair <int , vector <  int > > > patch_list;
 	int loop_count = 0;
 	vector < vector <int>  > breaks;
 	vector < vector <int>  > continues;
+	vector < vector <string>  > case_lists;
+	vector < int  > case_defs;
+	int loopc = 0;
 %}
 
 %union{
 	Node * node;
 }
 
-%token<node> SEMI EQUAL ADD SUB MUL DIV MOD GT LT GE LE EQ NE OR AND LP RP LB RB LS RS LIBRARIES COMMA  INT VOID FLOAT FOR WHILE IF ELSE SWITCH CASE DEFAULT BREAK CONTINUE RETURN INTEGERS FLOATING_POINTS IDENTIFIER 
+%token<node> SEMI EQUAL ADD SUB MUL DIV MOD GT LT GE LE EQ NE OR AND LP RP MAIN LB RB LS RS COLON LIBRARIES COMMA  INT VOID FLOAT FOR WHILE IF ELSE SWITCH CASE DEFAULT BREAK CONTINUE RETURN INTEGERS FLOATING_POINTS IDENTIFIER 
 
-%type<node> start statements statement decl body intializer libraries paramslist_main paramslist condition post_loop forexp level_increase whileexp ifexp N M function_declaration res_id func_head param_list param param_list_main declaration_list d t l id_arr id_arr_asg dimlist expression sim_exp un_exp dm_exp log_exp and_exp rel_exp op1 op2 op3 term unop
+%type<node> start statements statement decl body intializer libraries switchexp switch_body case_st case_list case_label case_labels INIT paramslist_main paramslist condition post_loop forexp level_increase whileexp ifexp N M function_declaration res_id func_head param_list param param_list_main declaration_list d t l id_arr id_arr_asg dimlist expression sim_exp un_exp dm_exp log_exp and_exp rel_exp op1 op2 op3 term unop
 
 %start start
 
@@ -42,12 +46,36 @@
 
 %%
 
-start			:	libraries declaration_list 
+start			:	libraries declaration_list INT MAIN LP RP INIT body
 					{
 						$$ = new Node("start","");  
 						$$->children.push_back($2); 
+						$$->children.push_back($3); 
+						$$->children.push_back($4); 
+						$$->children.push_back($5); 
+						$$->children.push_back($6); 
+						$$->children.push_back($7); 
 						root = $$; 
+						string s = ic.str();
+						patch_quad(count(s.begin(),s.end(),'\n'),$7->quadlist);
+						symtab.decrease_level();
+						active_func_ptr = NULL;
+						ic<<"func end"<<endl;
+
 					};
+INIT			: 	{
+						$$ = new Node("INIT","");
+						Function * fnptr = symtab.search_function("main");
+						if(fnptr){
+							yyerror("Function main Already Declared");
+						}
+						else{
+							active_func_ptr = symtab.enter_func("main",_integer);
+						}
+						symtab.increase_level();
+						ic<<"func begin main"<<endl;
+					};
+
 libraries		:	{}
 					|
 					LIBRARIES libraries
@@ -127,7 +155,7 @@ statement		:	d
 						$$ = new Node("statement","");
 						$$->children.push_back($1);
 						$$->children.push_back($2);
-						if(loop_count==0){
+						if(loopc==0){
 							yyerror("Illegal use of continue statement.");
 						}
 						else{
@@ -141,7 +169,6 @@ statement		:	d
 					{
 						$$ = new Node("statement","");$$->children.push_back($1);
 					}
-
 					|
 					RETURN id_arr_asg SEMI
 					{
@@ -172,6 +199,9 @@ statement		:	d
 						patch_quad(patch_list[x],continues.back());
 						breaks.pop_back();
 						continues.pop_back();
+						case_defs.pop_back();
+						case_lists.pop_back();
+						loopc--;
 					}
 					|
 					forexp body
@@ -190,8 +220,121 @@ statement		:	d
 						breaks.pop_back();
 						continues.pop_back();
 						loop_count--;
+						case_defs.pop_back();
+						case_lists.pop_back();
+						loopc--;
 					}
-					;
+					|
+					switchexp switch_body
+					{
+						$$ = new Node("statement","");$$->children.push_back($1);$$->children.push_back($2);
+
+						$$->quadlist = $1->quadlist;
+						$$->quadlist.insert($$->quadlist.end(), $2->quadlist.begin(), $2->quadlist.end());
+
+						string s = ic.str();
+						// cout<<$$->quadlist<<endl;
+						// cout<<case_lists[loop_count-1]<<endl;
+						for(int i=0; i<$$->quadlist.size()-1; i++){
+							vector <string> tk = split(case_lists[loop_count-1][i],"&");
+							for(int j=0; j<tk.size(); j++){
+								s = ic.str();
+								if(i==0&&j==0) patch_listf[$$->quadlist[0]-1] = count(s.begin(),s.end(),'\n');		
+								patch_listf[count(s.begin(),s.end(),'\n')] = $$->quadlist[i];
+								ic<<"if "<<$1->var<<" == "<<tk[j]<<" goto "<<endl;
+							}
+						}
+						if(continues[loop_count-1].size()!=0) {
+							continues[loop_count-1-1].insert(continues[loop_count-1-1].end(),continues[loop_count-1].begin(), continues[loop_count-1].end());
+						}
+								s = ic.str();
+						patch_quad(count(s.begin(),s.end(),'\n'),breaks[loop_count-1]);
+						symtab.decrease_level();
+						breaks.pop_back();
+						continues.pop_back();
+						loop_count--;
+						case_defs.pop_back();
+						case_lists.pop_back();
+
+					};
+
+switchexp		:	SWITCH LP expression RP
+					{
+						breaks.push_back(vector <int> (0));
+						continues.push_back(vector <int> (0));
+						loop_count++;
+						case_defs.push_back(0);
+						case_lists.push_back(vector <string> (0));
+						symtab.increase_level();
+						ic<<"goto "<<endl;
+						string s = ic.str();
+
+						$$->quadlist.push_back(count(s.begin(),s.end(),'\n'));
+						$$->var = $3->var;
+
+					};
+switch_body		:	LB case_list RB
+					{
+						$$ = new Node("switch_body","");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);
+						string s = ic.str();
+						$$->quadlist = $2->quadlist;
+
+					};
+case_list		:	case_st case_list
+					{
+						$$ = new Node("case_list","");$$->children.push_back($1);$$->children.push_back($2);;
+						$$->quadlist = $1->quadlist;
+						$$->quadlist.insert($$->quadlist.end(), $2->quadlist.begin(), $2->quadlist.end());
+					}
+					|
+					case_st
+					{
+						$$ = new Node("case_list","");$$->children.push_back($1);;
+						$$->quadlist = $1->quadlist;
+					};
+case_st			:	case_labels statements
+					{
+						$$ = new Node("case_st","");$$->children.push_back($1);$$->children.push_back($2);;
+						case_lists[loop_count-1].push_back($1->var);
+						string s = ic.str();
+
+						$$->quadlist.push_back(count(s.begin(),s.end(),'\n'));
+
+					};
+case_labels		:	case_label
+					{
+
+						$$ = new Node("case_labels","");$$->children.push_back($1);
+						$$->var = $1->var;
+					}
+					|
+					case_label case_labels
+					{
+						$$ = new Node("case_labels","");$$->children.push_back($1);$$->children.push_back($2);;
+						$$->var = $1->var + "&" + $2->var;
+					};
+case_label		:	CASE INTEGERS COLON
+					{
+						$$ = new Node("case_label","");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);
+						$$->var = $2->value;
+					}
+					|
+					DEFAULT COLON
+					{
+						$$ = new Node("case_label","");$$->children.push_back($1);$$->children.push_back($2);;
+						$$->var = $1->value;
+						case_defs[loop_count-1]++;
+						if(case_defs[loop_count-1]>1){
+							yyerror("cannot use multiple defaults");
+						}
+						// $$->var
+						// if(case_def){
+						// 	yyerror("Already a default case declared.");
+						// }
+						// else case_def = true;
+					};
+
+
 forexp			:	FOR LP intializer condition post_loop RP
 					{
 						$$ = new Node("forexp","");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);$$->children.push_back($4);$$->children.push_back($5);		
@@ -209,7 +352,11 @@ forexp			:	FOR LP intializer condition post_loop RP
 						patch_quad($3->quadlist[0],temp);
 						breaks.push_back(vector <int> (0));
 						continues.push_back(vector <int> (0));
+						case_defs.push_back(0);
+						case_lists.push_back(vector <string> (0));
 						loop_count++;
+						loopc++;
+
 					};
 
 intializer		:	expression SEMI
@@ -264,6 +411,10 @@ whileexp		:	WHILE M LP expression RP
 							breaks.push_back(vector <int> (0));
 							continues.push_back(vector <int> (0));
 							loop_count++;
+							case_defs.push_back(0);
+							case_lists.push_back(vector <string> (0));
+							loopc++;
+
 
 
 					};
@@ -532,12 +683,12 @@ expression		:	id_arr_asg EQUAL expression
 									string v = $3->var;
 									if(ptr->eletype != $3->data_type){
 										if($3->data_type==_real){
-											ic<<get_var()<<" = cnvrt_to_int(" + $3->var + ")"<<endl;
-											v = get_curr_var();
+											ic<<"i" + get_var()<<" = cnvrt_to_int(" + $3->var + ")"<<endl;
+											v = "i" + get_curr_var();
 										}
 										else if($3->data_type==_integer){
-											ic<<get_var()<<" = cnvrt_to_float(" + $3->var + ")"<<endl;
-											v = get_curr_var();
+											ic<<"f" + get_var()<<" = cnvrt_to_float(" + $3->var + ")"<<endl;
+											v = "f" + get_curr_var();
 										}
 									}
 									ic<<$1->var<<" = "<<v<<endl;
@@ -559,19 +710,25 @@ id_arr_asg			: 	IDENTIFIER
 					{
 						$$ = new Node("id_arr",$1->value);
 						$$->children.push_back($1);
-						$$->var = "$" + $1->value;						
+						$$->var = $1->value;						
 						Variable * ptr = symtab.search_var($1->value, level);
 						if(ptr==NULL){
 							yyerror("Variable \033[1;31m" + $1->value + "\033[0m not declared.");
 							$$->data_type = _error;
 						}
 						else{
+							if(ptr->eletype==_real){
+								$$->var ="f." + $$->var;
+							}
+							else{
+								$$->var ="i." + $$->var;
+							}
 							if(ptr->type==_array){
 								yyerror("The variable " + ptr->id + " is an array, cant use array directly.");
 							}
 							else{	
 							$$->data_type = ptr->eletype;
-							if(ptr->level!=0) $$->var+= "$" + to_string(ptr->level);
+							if(ptr->level!=0) $$->var+= "." + to_string(ptr->level) + "." + active_func_ptr->id;
 							}
 						}
 
@@ -588,7 +745,7 @@ id_arr_asg			: 	IDENTIFIER
 						string ht = "";
 
 						ptr = symtab.search_var($1->value,level);
-						if(ptr&&ptr->level!=0) ht +=  "$" + to_string(ptr->level);
+						if(ptr&&ptr->level!=0) ht +=  "." + to_string(ptr->level) + "." + active_func_ptr->id;
 
 						if(ptr==NULL){
 							yyerror("Variable \033[1;31m" + $1->value + "\033[0m not declared.");							
@@ -602,21 +759,27 @@ id_arr_asg			: 	IDENTIFIER
 								$$->data_type = _error;
 							}
 							else{	
-								string tv = get_var();
+								string tv = "i" + get_var();
+
 								string addr = tv;
-								ic<<tv<<" = addr($" + $1->value +ht +")"<<endl;
+								if(ptr->eletype==_real){
+									ic<<tv<<" = addr(f." + $1->value +ht +")"<<endl;
+								}
+								else{
+									ic<<tv<<" = addr(i." + $1->value +ht +")"<<endl;
+								}
 								tv = dimlist[0];
 								for(int i=1; i<ptr->dimlist.size(); i++){
-									ic<<get_var()<<" = "<< tv <<" * "<<ptr->dimlist[i]<<endl;
-									tv = get_curr_var();
-									ic<<get_var()<<" = "<<tv<<" + "<<dimlist[i]<<endl;
-									tv = get_curr_var();
+									ic<<"i" + get_var()<<" = "<< tv <<" * "<<ptr->dimlist[i]<<endl;
+									tv = "i" + get_curr_var();
+									ic<<"i" + get_var()<<" = "<<tv<<" + "<<dimlist[i]<<endl;
+									tv = "i" + get_curr_var();
 								}
 								int size = 4;
 								if(ptr->eletype==_real) size = 8;
 								
-								ic<<get_var() + " = " + tv + " * " + to_string(size)<<endl;
-								tv = get_curr_var();
+								ic<<"i" + get_var() + " = " + tv + " * " + to_string(size)<<endl;
+								tv = "i" + get_curr_var();
 								$$->var = addr + "[" + tv + "]";
 							}
 							dimlist.clear();
@@ -633,7 +796,7 @@ log_exp 		:	log_exp OR and_exp
 							}
 							else{
 								$$->data_type = _boolean;
-								$$->var =  get_var();
+								$$->var =  "i" + get_var();
 								ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<$3->var<<endl;	
 							}
 						}
@@ -660,7 +823,7 @@ and_exp 		:	and_exp AND rel_exp
 							}
 							else{
 								$$->data_type = _boolean;
-								$$->var = get_var();
+								$$->var = "i" + get_var();
 								ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<$3->var<<endl;
 							}
 						}
@@ -692,20 +855,25 @@ rel_exp 		:	rel_exp op3 sim_exp
 								if(tt == _integer || tt == _real){
 									// $$->data_type = ;
 									if($1->data_type==$3->data_type){
-										$$->var = get_var();
+										if($1->data_type==_real){
+											$$->var = "f" + get_var();
+										}
+										if($1->data_type==_integer){
+											$$->var = "i" + get_var();
+										}
 										ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<$3->var<<endl;
 									}
 									else{
 										if($1->data_type==_real){
-											string tv = get_var();
+											string tv = "f" + get_var();
 											ic<<tv<<" = cnvrt_to_float("<<$1->var<<")\n";
-											$$->var = get_var();
+											$$->var = "f" + get_var();
 											ic<<$$->var<<" = "<<tv<<" "<<$2->value<<" "<<$3->var<<endl;
 										}
 										else{
-											string tv = get_var();
+											string tv = "f" + get_var();
 											ic<<tv<<" = cnvrt_to_float("<<$3->var<<")\n";
-											$$->var = get_var();
+											$$->var = "f" + get_var();
 											ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<tv<<endl;
 										}
 									}
@@ -734,20 +902,25 @@ sim_exp 		:	sim_exp op1 dm_exp
 							if(tt == _integer || tt == _real){
 								$$->data_type = tt;
 								if($1->data_type==$3->data_type){
-									$$->var = get_var();
+										if($1->data_type==_real){
+											$$->var = "f" + get_var();
+										}
+										if($1->data_type==_integer){
+											$$->var = "i" + get_var();
+										}
 									ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<$3->var<<endl;
 								}
 								else{
 									if($1->data_type==_real){
-										string tv = get_var();
+										string tv = "f" + get_var();
 										ic<<tv<<" = cnvrt_to_float("<<$1->var<<")\n";
-										$$->var = get_var();
+										$$->var = "f" + get_var();
 										ic<<$$->var<<" = "<<tv<<" "<<$2->value<<" "<<$3->var<<endl;
 									}
 									else{
-										string tv = get_var();
+										string tv = "f" + get_var();
 										ic<<tv<<" = cnvrt_to_float("<<$3->var<<")\n";
-										$$->var = get_var();
+										$$->var = "f" + get_var();
 										ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<tv<<endl;
 									}
 								}
@@ -780,20 +953,25 @@ dm_exp 			: 	dm_exp op2 un_exp
 							if(tt == _integer || tt == _real){
 								$$->data_type = tt;
 								if($1->data_type==$3->data_type){
-									$$->var = get_var();
+										if($1->data_type==_real){
+											$$->var = "f" + get_var();
+										}
+										if($1->data_type==_integer){
+											$$->var = "i" + get_var();
+										}
 									ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<$3->var<<endl;
 								}
 								else{
 									if($1->data_type==_real){
-										string tv = get_var();
+										string tv = "f" + get_var();
 										ic<<tv<<" = cnvrt_to_float("<<$1->var<<")\n";
-										$$->var = get_var();
+										$$->var = "f" + get_var();
 										ic<<$$->var<<" = "<<tv<<" "<<$2->value<<" "<<$3->var<<endl;
 									}
 									else{
-										string tv = get_var();
+										string tv = "f" + get_var();
 										ic<<tv<<" = cnvrt_to_float("<<$3->var<<")\n";
-										$$->var = get_var();
+										$$->var = "f" + get_var();
 										ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<tv<<endl;
 									}
 								}
@@ -823,9 +1001,14 @@ dm_exp 			: 	dm_exp op2 un_exp
 un_exp 			: 	unop term
 					{
 						$$ = new Node("un_exp",$1->value + $2->value);$$->children.push_back($1);$$->children.push_back($2);
-						$$->var = get_var();
+										if($2->data_type==_real){
+											$$->var = "f" + get_var();
+										}
+										if($2->data_type==_integer){
+											$$->var = "i" + get_var();
+										}
 						ic<<$$->var<<" = "<<$1->value<<" "<<$2->var<<endl;
-						ic<<$2->var<<" = "<<$$->var<<endl;;
+						// ic<<$2->var<<" = "<<$$->var<<endl;;
 						$$->var = $2->var;
 						if($1->data_type == _integer || $1->data_type == _real){
 							$$->data_type = $1->data_type;
@@ -944,12 +1127,12 @@ term 			:	LP expression RP
 								for(int i=0; i<params.size(); i++){
 									if(params[i].second!=call_func_ptr->parameters[i]->eletype){
 										if(params[i].second == _real&&call_func_ptr->parameters[i]->eletype == _integer){
-											ic<<get_var()<<" = cnvrt_to_int("+params[i].first+")"<<endl;
-											params[i].first = get_curr_var();
+											ic<<"i" + get_var()<<" = cnvrt_to_int("+params[i].first+")"<<endl;
+											params[i].first = "i" + get_curr_var();
 										}
 										else if(params[i].second == _integer&&call_func_ptr->parameters[i]->eletype == _real){
-											ic<<get_var()<<" = cnvrt_to_float("+params[i].first+")"<<endl;
-											params[i].first = get_curr_var();										
+											ic<<"f" + get_var()<<" = cnvrt_to_float("+params[i].first+")"<<endl;
+											params[i].first = "f" + get_curr_var();										
 										}
 										else{
 											yyerror("Function's " + to_string(i+1) + " parameter is " + _type[call_func_ptr->parameters[i]->eletype] + " while passed is " + _type[params[i].second]);
@@ -959,7 +1142,12 @@ term 			:	LP expression RP
 								for(int i=0; i<params.size(); i++){
 									ic<<"param "<<params[i].first<<endl;
 								}
-								$$->var = get_var();
+								if(call_func_ptr->return_type==_real){
+									$$->var = "f" + get_var();
+								}
+								if(call_func_ptr->return_type==_integer){
+									$$->var = "i" + get_var();
+								}
 								ic<<"refparam "<<$$->var<<endl;
 								ic<<"call "<<call_func_ptr->id<<", "<<params.size()+1<<endl;
 								$$->data_type = call_func_ptr->return_type;
@@ -1103,6 +1291,7 @@ int main(){
 		// 	cout<<it->first<<" "<<it->second<<endl;
 		// }
 		ic.str(backpatch_quad(ic.str()));
+		ic.str(backpatch_force(ic.str()));
 		ofstream out("inter.txt");
 		out<<ic.str();
 		out.close();

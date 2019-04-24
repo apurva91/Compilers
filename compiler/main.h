@@ -24,6 +24,7 @@ string get_curr_var();
 bool is_number(string s);
 Type get_type(Type a, Type b);
 string backpatch_quad(string str);
+string backpatch_force(string str);
 void patch_quad(int a, vector <int> b);
 vector<string> split(string str,string sep);
 void ReplaceStringInPlace(string& subject, const string& search,const string& replace);

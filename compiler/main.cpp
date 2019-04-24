@@ -45,6 +45,7 @@ extern SymbolTable symtab;
 // 
 // extern vector < pair < int , vector <int > > > patch_list;
 extern map <int , int> patch_list;
+extern map <int , int> patch_listf;
 
 void patch_quad(int a, vector <int> b){
 	for(int i=0; i<b.size(); i++){
@@ -84,6 +85,21 @@ string backpatch_quad(string s){
 			tmp<<i+1<<": "<<p[i]<<endl;
 		}
 		return tmp.str();
+}
+
+string backpatch_force(string s){
+		vector <string> p = split(s,"\n");
+		for(auto it=patch_listf.begin(); it!=patch_listf.end(); it++){
+			int j = it->second;
+			p[it->first] = p[it->first] + to_string(j+1);
+		}
+
+		stringstream tmp;
+		for(int i=0; i<p.size(); i++){
+			tmp<<p[i]<<endl;
+		}
+		return tmp.str();
+
 }
 
 void ReplaceStringInPlace(std::string& subject, const std::string& search,const std::string& replace) {
