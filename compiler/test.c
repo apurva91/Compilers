@@ -6,9 +6,10 @@ int b,c,d,e;
 int main(){
 	int i,j;
 	if(i==5){	
-		while( (!(i>j)) && (i>j) && (i+j<5)){
-			i = i-1;
+		for(i=5; (i<10)||i==j; i=i+1){
+			j = j+1;
 		}
-		j = 5;
+		int k;
+		k = 5;
 	}
 }

@@ -210,11 +210,11 @@ statement		:	d
 						string s = ic.str();
 						temp[0] = count(s.begin(),s.end(),'\n');
 						ic<<"goto "<<endl;
-						patch_quad($1->quadlist[1],temp);
-						temp[0] = $1->quadlist[0]; 
-						patch_quad(count(s.begin(),s.end(),'\n')+1,temp);
+						patch_quad($1->quadlist[0],temp);
+						// temp[0] = $1->quadlist[0]; 
+						patch_quad(count(s.begin(),s.end(),'\n')+1,$1->falselist);
 						patch_quad(count(s.begin(),s.end(),'\n')+1,breaks.back());
-						patch_quad($1->quadlist[1],continues.back());
+						patch_quad($1->quadlist[0],continues.back());
 						breaks.pop_back();
 						continues.pop_back();
 						loop_count--;
@@ -339,12 +339,14 @@ forexp			:	FOR LP intializer condition post_loop RP
 						vector <int> temp (1);
 						temp[0] = $5->quadlist[0];
 						
-						$$->quadlist.push_back($4->quadlist[0]);
-						$$->quadlist.push_back($4->quadlist[2]);
+
+
+						$$->falselist = $4->falselist;
+						$$->quadlist = $4->quadlist;
 						
 						string s = ic.str(); 
-						temp[0] = $4->quadlist[1];
-						patch_quad(count(s.begin(),s.end(),'\n'),temp);
+						// temp[0] = $4->quadlist[1];
+						patch_quad(count(s.begin(),s.end(),'\n'),$4->truelist);
 
 						temp[0] = $5->quadlist[0];
 						patch_quad($3->quadlist[0],temp);
@@ -371,13 +373,15 @@ condition		:	expression SEMI
 					{
 
 						$$ = new Node("condition","");$$->children.push_back($1);$$->children.push_back($2);
+						// string s = ic.str();
+						// $$->quadlist.push_back(count(s.begin(),s.end(),'\n'));
+						// ic<<"if "<<$1->var<<" <= 0 goto "<<endl;
+						// s = ic.str();
+						// $$->quadlist.push_back(count(s.begin(),s.end(),'\n'));
+						// ic<<"goto "<<endl;
+						$$->falselist = $1->falselist;
+						$$->truelist = $1->truelist;
 						string s = ic.str();
-						$$->quadlist.push_back(count(s.begin(),s.end(),'\n'));
-						ic<<"if "<<$1->var<<" <= 0 goto "<<endl;
-						s = ic.str();
-						$$->quadlist.push_back(count(s.begin(),s.end(),'\n'));
-						ic<<"goto "<<endl;
-						s = ic.str();
 						$$->quadlist.push_back(count(s.begin(),s.end(),'\n'));
 						if($1->data_type!=_boolean){
 							yyerror("expecting boolean in the condition got " + $1->data_type);
