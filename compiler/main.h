@@ -26,6 +26,7 @@ Type get_type(Type a, Type b);
 string backpatch_quad(string str);
 string backpatch_force(string str);
 void patch_quad(int a, vector <int> b);
+void patch_quad_force(int a, vector <int> b);
 vector<string> split(string str,string sep);
 void ReplaceStringInPlace(string& subject, const string& search,const string& replace);
 
@@ -43,6 +44,8 @@ struct Node{
 	string value;	//token value
 	vector <Node *> children;
 	vector <int> quadlist;
+	vector <int> falselist;
+	vector <int> truelist;
 	int line_number;
 	string var;
 	Type data_type;

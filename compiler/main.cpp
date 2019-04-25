@@ -54,6 +54,14 @@ void patch_quad(int a, vector <int> b){
 	// patch_list.push_back(make_pair(a,b));
 }
 
+void patch_quad_force(int a, vector <int> b){
+	for(int i=0; i<b.size(); i++){
+		patch_listf[b[i]] = a;
+	}
+	// patch_list.push_back(make_pair(a,b));
+}
+
+
 std::vector<std::string> split(std::string str,std::string sep){
     char* cstr=const_cast<char*>(str.c_str());
     char* current;

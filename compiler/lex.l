@@ -31,6 +31,7 @@
 ")"			{ yylval.node = new Node("RP",yytext); return RP; }	
 "{"			{ yylval.node = new Node("LB",yytext); return LB; }	
 "}"			{ yylval.node = new Node("RB",yytext); return RB; }	
+"!"			{ yylval.node = new Node("NOT",yytext); return NOT; }	
 "["			{ yylval.node = new Node("LS",yytext); return LS; }
 "]"			{ yylval.node = new Node("RS",yytext); return RS; }	
 ","			{ yylval.node = new Node("COMMA",yytext); return COMMA; } 

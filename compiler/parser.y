@@ -35,7 +35,7 @@
 	Node * node;
 }
 
-%token<node> SEMI EQUAL ADD SUB MUL DIV MOD GT LT GE LE EQ NE OR AND LP RP MAIN LB RB LS RS COLON LIBRARIES COMMA  INT VOID FLOAT FOR WHILE IF ELSE SWITCH CASE DEFAULT BREAK CONTINUE RETURN INTEGERS FLOATING_POINTS IDENTIFIER 
+%token<node> SEMI EQUAL ADD SUB MUL DIV MOD GT LT GE LE EQ NE OR NOT AND LP RP MAIN LB RB LS RS COLON LIBRARIES COMMA  INT VOID FLOAT FOR WHILE IF ELSE SWITCH CASE DEFAULT BREAK CONTINUE RETURN INTEGERS FLOATING_POINTS IDENTIFIER 
 
 %type<node> start statements statement decl body intializer libraries  switchexp dimlist_var switch_body case_st case_list case_label case_labels INIT paramslist_main paramslist condition post_loop forexp level_increase whileexp ifexp N M function_declaration res_id func_head param_list param param_list_main declaration_list d t l id_arr id_arr_asg dimlist expression sim_exp un_exp dm_exp log_exp and_exp rel_exp op1 op2 op3 term unop
 
@@ -50,14 +50,15 @@ start			:	libraries declaration_list INT MAIN LP RP INIT body
 					{
 						$$ = new Node("start","");  
 						$$->children.push_back($2); 
-						$$->children.push_back($3); 
-						$$->children.push_back($4); 
-						$$->children.push_back($5); 
-						$$->children.push_back($6); 
-						$$->children.push_back($7); 
+						// $$->children.push_back($3); 
+						// $$->children.push_back($4); 
+						// $$->children.push_back($5); 
+						// $$->children.push_back($6); 
+						// $$->children.push_back($7); 
+						$$->children.push_back($8); 
 						root = $$; 
 						string s = ic.str();
-						patch_quad(count(s.begin(),s.end(),'\n'),$7->quadlist);
+						patch_quad(count(s.begin(),s.end(),'\n'),$8->quadlist);
 						symtab.decrease_level();
 						active_func_ptr = NULL;
 						ic<<"func end"<<endl;
@@ -119,7 +120,7 @@ statement		:	d
 						// $$->quadlist = $2->quadlist;
 						// $$->quadlist.insert($$->quadlist.end(), $3->quadlist.begin(), $3->quadlist.end());
 						// $$->quadlist.insert($$->quadlist.end(), $6->quadlist.begin(), $6->quadlist.end());
-						patch_quad($5->quadlist[0],$1->quadlist);
+						patch_quad($5->quadlist[0],$1->falselist);
 						string s = ic.str();
 						patch_quad(count(s.begin(),s.end(),'\n'),$3->quadlist);
 					}
@@ -130,9 +131,12 @@ statement		:	d
 						$$->children.push_back($1);
 						$$->children.push_back($2);
 						$$->quadlist = $2->quadlist;
-						$$->quadlist.insert($$->quadlist.end(), $1->quadlist.begin(), $1->quadlist.end());
+						$$->quadlist.insert($$->quadlist.end(), $1->falselist.begin(), $1->falselist.end());
 						string s = ic.str();
-						patch_quad(count(s.begin(),s.end(),'\n'),$1->quadlist);
+						patch_quad_force(count(s.begin(),s.end(),'\n'),$1->falselist);
+						// patch_quad_force(count(s.begin(),s.end(),'\n'),$1->quadlist);
+						// $$->falselist = $3->falselist;
+
 					}
 					|
 					BREAK SEMI
@@ -187,7 +191,7 @@ statement		:	d
 						patch_list[x] = stoi($1->var);
 						ic<<"goto "<<endl;
 						s = ic.str();
-						patch_quad(count(s.begin(),s.end(),'\n'),$1->quadlist);
+						patch_quad(count(s.begin(),s.end(),'\n'),$1->falselist);
 						loop_count--;
 						patch_quad(count(s.begin(),s.end(),'\n'),breaks.back());
 						patch_quad(patch_list[x],continues.back());
@@ -393,15 +397,18 @@ post_loop		:	expression
 whileexp		:	WHILE M LP expression RP
 					{
 						$$ = new Node("whileexp","");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);$$->children.push_back($4);$$->children.push_back($5);					
-							string s = ic.str();
-							$$->quadlist.push_back(count(s.begin(),s.end(),'\n'));
-							$$->var = to_string($2->quadlist[0]);
-						if($4->data_type == _boolean){
-							ic<<"if "<<$4->var<<" <= 0 goto "<<endl;
-						}
-						else{
-							yyerror("expecting boolean in the condition got " + $4->data_type);
-						}
+
+							if($4->data_type == _boolean){
+								string s = ic.str();
+								$$->quadlist.push_back(count(s.begin(),s.end(),'\n'));
+								$$->falselist = $4->falselist;
+								patch_quad_force($$->quadlist.back(), $4->truelist);
+								$$->var = to_string($2->quadlist[0]);
+								// ic<<"if "<<$4->var<<" <= 0 goto "<<endl;
+							}
+							else{
+								yyerror("expecting boolean in the condition got " + $4->data_type);
+							}
 							breaks.push_back(vector <int> (0));
 							continues.push_back(vector <int> (0));
 							loop_count++;
@@ -422,7 +429,9 @@ ifexp			:	IF LP expression RP
 							string s = ic.str();
 							$$->quadlist.push_back(count(s.begin(),s.end(),'\n'));
 							// cout<<$$->quadlist.back()<<endl;
-							ic<<"if "<<$3->var<<" <= 0 goto "<<endl;
+							// ic<<"if "<<$3->var<<" <= 0 goto "<<endl;
+							patch_quad_force($$->quadlist.back(), $3->truelist);
+							$$->falselist = $3->falselist;
 						}
 						else{
 							yyerror("expecting boolean in the condition got " + $2->data_type);
@@ -740,7 +749,10 @@ expression		:	id_arr_asg EQUAL expression
 						$$ = new Node("expression","");
 						$$->data_type = $1->data_type;
 						$$->children.push_back($1);		
-						$$->var = "_term" + $1->var;				
+						$$->var = "_term" + $1->var;	
+												$$->truelist = $1->truelist;
+						$$->falselist = $1->falselist;
+			
 					};
 
 id_arr_asg			: 	IDENTIFIER
@@ -823,24 +835,27 @@ id_arr_asg			: 	IDENTIFIER
 						}
 					};
 
-log_exp 		:	log_exp OR and_exp
+log_exp 		:	log_exp OR M and_exp
 					{
-						$$ = new Node("log_exp","or");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);
-						if($1->data_type!=_error&&$3->data_type!=_error){	
-							if(get_type($1->data_type,$3->data_type)==_error){
+						$$ = new Node("log_exp","or");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($4);
+						if($1->data_type!=_error&&$4->data_type!=_error){	
+							if(get_type($1->data_type,$4->data_type)==_error){
 								yyerror("Mismatch in datatype while comparision " + $$->value);
 								$$->data_type = _error;
 							}
 							else{
 								$$->data_type = _boolean;
-								$$->var =  "i" + get_var();
-								ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<$3->var<<endl;	
+								// $$->var =  "i" + get_var();
+								// ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<$4->var<<endl;	
 							}
+							patch_quad_force($3->quadlist[0], $1->falselist);
+							$$->truelist = $1->truelist;
+							$$->truelist.insert($$->truelist.end(), $4->truelist.begin(), $4->truelist.end());
+							$$->falselist = $4->falselist;
 						}
 						else{
 								$$->data_type = _error;
 						}
-
 					}
 					| 
 					and_exp
@@ -848,21 +863,28 @@ log_exp 		:	log_exp OR and_exp
 						$$ = new Node("log_exp","");$$->children.push_back($1);
 						$$->data_type = $1->data_type;
 						$$->var = $1->var;
+												$$->truelist = $1->truelist;
+						$$->falselist = $1->falselist;
+
 					};
 
-and_exp 		:	and_exp AND rel_exp
+and_exp 		:	and_exp AND M rel_exp
 					{
-						$$ = new Node("and_exp","and");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);
-						if($1->data_type!=_error&&$3->data_type!=_error){	
-							if(get_type($1->data_type,$3->data_type)==_error){
+						$$ = new Node("and_exp","and");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($4);
+						if($1->data_type!=_error&&$4->data_type!=_error){	
+							if(get_type($1->data_type,$4->data_type)==_error){
 								yyerror("Mismatch in datatype while comparision " + $$->value);
 								$$->data_type = _error;
 							}
 							else{
 								$$->data_type = _boolean;
-								$$->var = "i" + get_var();
-								ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<$3->var<<endl;
+								// $$->var = "i" + get_var();
+								// ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<$4->var<<endl;
 							}
+							patch_quad_force($3->quadlist[0], $1->truelist);
+							$$->falselist = $1->falselist;
+							$$->falselist.insert($$->falselist.end(), $4->falselist.begin(), $4->falselist.end());
+							$$->truelist = $4->truelist;
 						}
 						else{
 								$$->data_type = _error;
@@ -875,6 +897,9 @@ and_exp 		:	and_exp AND rel_exp
 						$$ = new Node("and_exp","");$$->children.push_back($1);
 						$$->data_type = $1->data_type;
 						$$->var = $1->var;
+												$$->truelist = $1->truelist;
+						$$->falselist = $1->falselist;
+
 
 					};
 
@@ -887,10 +912,10 @@ rel_exp 		:	rel_exp op3 sim_exp
 								$$->data_type = _error;
 							}
 							else{
+								// cout<<"OK"
 								$$->data_type = _boolean;
 								Type tt = get_type($1->data_type, $3->data_type);
 								if(tt == _integer || tt == _real){
-									// $$->data_type = ;
 									if($1->data_type==$3->data_type){
 										if($1->data_type==_real){
 											$$->var = "f" + get_var();
@@ -914,6 +939,12 @@ rel_exp 		:	rel_exp op3 sim_exp
 											ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<tv<<endl;
 										}
 									}
+									string s = ic.str();
+									$$->falselist.push_back(count(s.begin(),s.end(),'\n'));
+									ic<<"if "<<$$->var<<" <= 0 goto "<<endl;
+									s = ic.str();
+									$$->truelist.push_back(count(s.begin(),s.end(),'\n'));
+									ic<<"goto "<<endl;
 								}
 
 							}
@@ -928,6 +959,8 @@ rel_exp 		:	rel_exp op3 sim_exp
 						$$ = new Node("rel_exp","");$$->children.push_back($1);
 						$$->data_type = $1->data_type;
 						$$->var = $1->var;
+						$$->truelist = $1->truelist;
+						$$->falselist = $1->falselist;
 						
 					};
 
@@ -977,8 +1010,10 @@ sim_exp 		:	sim_exp op1 dm_exp
 					{
 						$$ = new Node("sim_exp",$1->value);$$->children.push_back($1);
 						$$->var = $1->var;
-						if($1->data_type == _integer || $1->data_type == _real) $$->data_type = $1->data_type;
-						else $$->data_type = _error; 
+						 $$->data_type = $1->data_type;
+						 						$$->truelist = $1->truelist;
+						$$->falselist = $1->falselist;
+
 
 					};
 
@@ -1028,10 +1063,9 @@ dm_exp 			: 	dm_exp op2 un_exp
 					{
 						$$ = new Node("dm_exp",$1->value);$$->children.push_back($1);
 							$$->var = $1->var;
-						if($1->data_type == _integer || $1->data_type == _real){
 							$$->data_type = $1->data_type;
-						}
-						else $$->data_type = _error; 
+						$$->truelist = $1->truelist;
+						$$->falselist = $1->falselist;
 
 					};
 
@@ -1046,11 +1080,11 @@ un_exp 			: 	unop term
 										}
 						ic<<$$->var<<" = "<<$1->value<<" "<<$2->var<<endl;
 						// ic<<$2->var<<" = "<<$$->var<<endl;;
-						$$->var = $2->var;
-						if($1->data_type == _integer || $1->data_type == _real){
-							$$->data_type = $1->data_type;
+						// $$->var = $2->var;
+						if($2->data_type == _integer || $2->data_type == _real){
+							$$->data_type = $2->data_type;
 						}
-						else if($1->data_type == _boolean){
+						else if($2->data_type == _boolean){
 							yyerror("Mismatch in datatype expecting integer or real got boolean. " + $$->value);
 							$$->data_type = _error;
 						}
@@ -1062,16 +1096,10 @@ un_exp 			: 	unop term
 					{
 						$$ = new Node("un_exp",$1->value);$$->children.push_back($1);
 						$$->var = $1->var;
-						
-						if($1->data_type == _integer || $1->data_type == _real){
-							$$->data_type = $1->data_type;
-						}
-						else if($1->data_type == _boolean){
-							yyerror("Mismatch in datatype expecting integer or real got boolean. " + $$->value);
-							$$->data_type = _error;
-							
-						}
-						else $$->data_type = _error; 
+						$$->data_type = $1->data_type;
+												$$->truelist = $1->truelist;
+						$$->falselist = $1->falselist;
+
 					};
 
 op1 			: 	ADD
@@ -1142,6 +1170,24 @@ term 			:	LP expression RP
 						$$ = new Node("term","");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);
 						$$->data_type = $2->data_type;
 						$$->var = $2->var;
+						$$->truelist = $2->truelist;
+						$$->falselist = $2->falselist;
+					}
+					|
+					NOT LP expression RP
+					{
+						$$ = new Node("term","");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);$$->children.push_back($4);
+						if($3->data_type==_boolean){
+							$$->data_type = $3->data_type;
+						}
+						else{
+							yyerror("'!' operation is valid only on boolean expressions.");
+							$$->data_type = _error;
+						}
+						// ic<<"i" + get_var()<<" = ! "<<$3->var<<endl;
+						$$->var = $3->var;
+						$$->falselist = $3->truelist;
+						$$->truelist = $3->falselist;
 					}
 					|
 					INTEGERS
@@ -1276,8 +1322,10 @@ void printTree(Node *tree, string term) {
 	if(tree->value != "") {
 		// tree_file << "[" << tree->value << "]";
 	}
-		// tree_file << "[" << _type[tree->data_type] << "]";
-		tree_file << "[" << tree->quadlist << "]";
+		tree_file<<tree->quadlist;
+		tree_file<<tree->truelist;
+		tree_file<<tree->falselist;
+		// tree_file << "[" << tree->quadlist << "]";
 	tree_file << endl;
 	if(tree->children.size() > 6){
 		tree_line.push_back(true);
