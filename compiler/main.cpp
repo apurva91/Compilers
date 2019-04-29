@@ -11,12 +11,12 @@ Type get_type(Type a, Type b){
 
 string get_var(){
 	var_num++;
-	return "t" + to_string(var_num);
+	return to_string(var_num);
 }
 
 string get_curr_var(){
 	
-	return "t" + to_string(var_num);
+	return  to_string(var_num);
 }
 
 bool is_number(string s){
@@ -124,4 +124,26 @@ void ReplaceStringInPlace(std::string& subject, const std::string& search,const 
          subject.replace(pos, search.length(), replace);
          pos += replace.length();
     }
+}
+
+void SymtabReader(){
+	ifstream in_sym("symtab.txt");
+	string s;
+	in_sym>>s;
+	in_sym.close();
+	vector <string> g = split(s,"@");
+	vector <string> f = split(g[3],"$");
+	f = vector <string> (f.begin()+1,f.begin()+f.size()-1);
+	vector <string> p = split(g[5],"$");
+	p = vector <string> (p.begin()+1,p.begin()+p.size()-1);
+	vector < vector < vector < string > > > functions (f.size(), vector < vector <string> > (1));
+	for(int i=0; i<f.size(); i++){
+		functions[i][0] = split(string(f[i].begin()+1,f[i].begin()+f[i].size()-1),",");
+		vector <string> params = split(p[i],"#");
+		params = vector <string> (params.begin()+1,params.begin()+params.size()-1);
+		for(int j=0; j<params.size(); j++){
+			functions[i].push_back(split(string(params[j].begin()+1,params[j].begin()+params[j].size()-1),","));
+		} 
+	}
+	// cout<<functions<<endl;
 }

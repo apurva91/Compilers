@@ -1,5 +1,7 @@
 #include <bits/stdc++.h>
 using namespace std;
+#define int_size 4
+#define float_size 4
 
 enum Type{
 	_integer,
@@ -15,8 +17,9 @@ enum Type{
 
 extern int level;
 extern int var_num;
+extern stringstream xyz;
 extern int yylineno;
-const vector <string> _type = {"integer ", "real    ", "error   ", "none    ", "simple  ", "array   ", "function","boolean ","void    "};
+const vector <string> _type = {"integer", "real", "error", "none", "simple", "array", "function","boolean","void"};
 
 
 string get_var();
@@ -29,6 +32,8 @@ void patch_quad(int a, vector <int> b);
 void patch_quad_force(int a, vector <int> b);
 vector<string> split(string str,string sep);
 void ReplaceStringInPlace(string& subject, const string& search,const string& replace);
+void SymtabReader();
+
 
 template <class A> ostream& operator << (ostream& out, const vector<A> &v) {
 	out << "[";
@@ -63,7 +68,7 @@ struct Variable{
 	int level;
 	Variable(string id, Type type, Type eletype, int level): id(id), type(type), eletype(eletype), level(level){};
 	void print(){
-		cout<<"| "<< id <<" | "<< _type[type] <<" | "<<_type[eletype]<<" | " << level <<" | "<< dimlist<<" | "<<endl;
+		xyz<<"\t#{"<< id <<","<< _type[type] <<","<<_type[eletype]<<"," << level <<","<< dimlist<<"}\n";
 	}
 	// ostream &operator <<(ostream &os){
 	// 	os<<"| "<< id <<" | "<< type <<" | "<<eletype<<" | " << level <<" | "<< dimlist<<" |";
@@ -74,18 +79,23 @@ struct Function{
 	int num_param;
 	string id;
 	vector <Variable * > parameters;
-
+	int size;
 	Type return_type;
 
 	Function(string id, Type return_type): id(id), return_type(return_type){
 		num_param = 0;
+		size = 0;
 	};
 	void print(){
-		cout<<"| "<< id <<" | "<< _type[return_type] <<" | "<<num_param <<" | "<<endl;
-		if(parameters.size()>0) cout<<"Parameters: "<<endl;
+		xyz<<"{"<< id <<","<< _type[return_type] <<","<<num_param <<","<<size<<"}";
+	}
+	void print_params(){
+		xyz<<"\t${"<<id<<": "<<endl;
 		for(int i=0; i<parameters.size(); i++){
-			parameters[i]->print();
+			xyz<<"\t";parameters[i]->print();
+
 		}
+		xyz<<"\t#}";
 	}
 	Variable * search_param(string name){
 		for(int i=0; i<parameters.size(); i++){
@@ -96,6 +106,12 @@ struct Function{
 	Variable * enter_param(string name, Type type, Type eletype);
 	bool check_param_type(int pno, Type type){
 		return parameters[pno]->type==type;
+	}
+	int get_param_num(string name){
+		for(int i=0; i<parameters.size(); i++){
+			if(parameters[i]->id==name) return i+1;
+		}
+		return -1;
 	}
 };
 
@@ -131,20 +147,43 @@ struct SymbolTable{
 		level--;
 		variables.pop_back();
 	}
-	void print(){
+	string print(){
+		xyz.str("");
 		cout<<"Printing Symbol Table: "<<endl;
-		cout<<"Variables: "<<endl;
-		cout<<"| id | type | element type  | level | dimlist |"<<endl;
+		cout<<"Format for variables and parameters: {id,type,element_type,level,dimlist}"<<endl;
+		cout<<"Format for functions:                {id,return_type,num_param,size}"<<endl;
+		xyz<<"@Variables: @{"<<endl;
 		for(int i=0; i<=level; i++){			
 			for(auto it=variables[i].begin(); it!= variables[i].end(); it++){
 				it->second->print();
 			}
 		}
-		cout<<"Functions: "<<endl;
-		cout<<"| id | type | num_param |"<<endl;
+		xyz<<"#}"<<endl;
+		xyz<<"@Functions: @{"<<endl;
 		for(auto it=functions.begin(); it!= functions.end(); it++){
+			xyz<<"\t$";
 			it->second->print();
+				xyz<<endl;
 		}
+		xyz<<"$}"<<endl;
+				xyz<<"@Parameters: @{"<<endl;
+		for(auto it=functions.begin(); it!= functions.end(); it++){
+			it->second->print_params();
+				xyz<<endl;
+		}
+		xyz<<"$}"<<endl;
+		string s1 = xyz.str();
+		string s2 = s1;
+		ReplaceStringInPlace(s1,"\n","");
+		ReplaceStringInPlace(s1,"\t","");
+		ReplaceStringInPlace(s1," ","");
+		ReplaceStringInPlace(s2,"$","");
+		ReplaceStringInPlace(s2,"@","");
+		ReplaceStringInPlace(s2,"#","");
+		cout<<s2<<endl;
+		return s1;
+
 	}
 	SymbolTable(){increase_level();};
 };
+

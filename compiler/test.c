@@ -1,18 +1,22 @@
+#include <stdio.h>
 int a;
+int c[5];
+float b[5];
 
-int fib(int x){
-	int b;
-	if(x == 0){
-		b=0;
+int fib(int x, int y){
+	if(x==5){
+		return 5;
 	}
 	else{
-		b=x+fib(x-1);
+		return 8;
 	}
-	return b;
+	int i;
+	i = y;
 }
-int main()
-{
-	int y,r;
-	y = 4;
-	r = fib(y);
+
+int main(){
+	int i;
+	i =5;
+	a = i;
+	i = fib(i,6);
 }
