@@ -33,7 +33,7 @@
 	int bytes_g = 0; 
 	stringstream xyz;
 	vector < pair < string , bool > > int_pool = {make_pair("it0",true),make_pair("it1",true),make_pair("it2",true),make_pair("it3",true),make_pair("it4",true),make_pair("it5",true),make_pair("it6",true),make_pair("it7",true),make_pair("it8",true),make_pair("it9",true)};
-	vector < pair < string , bool > > float_pool = {make_pair("f0",true),make_pair("f1",true),make_pair("f2",true),make_pair("f3",true),make_pair("f4",true)};
+	vector < pair < string , bool > > float_pool = {make_pair("f0",true),make_pair("f1",true),make_pair("f2",true),make_pair("f3",true),make_pair("f4",true),make_pair("f5",true),make_pair("f6",true),make_pair("f7",true),make_pair("f8",true),make_pair("f9",true)};
 	int int_pool_curr = -1;
 	int float_pool_curr = -1;
 %}
@@ -1176,11 +1176,16 @@ un_exp 			: 	unop term
 						itv($2->var);
 						if($2->data_type==_real){
 							$$->var = gfv();
+							ic<<gfv()<<" = 0.0"<<endl;
+							ic<<$$->var<<" = " + gfcv() + " "<<$1->value<<" "<<$2->var<<endl;
+							itv(gfcv());
 						}
 						if($2->data_type==_integer){
 							$$->var = giv();
+							ic<<giv()<<" = 0"<<endl;
+							ic<<$$->var<<" = " + gicv() + " "<<$1->value<<" "<<$2->var<<endl;
+							itv(gicv());
 						}
-						ic<<$$->var<<" = 0 "<<$1->value<<" "<<$2->var<<endl;
 						// ic<<$2->var<<" = "<<$$->var<<endl;;
 						// $$->var = $2->var;
 						if($2->data_type == _integer || $2->data_type == _real){
@@ -1297,6 +1302,8 @@ term 			:	LP expression RP
 						$$ = new Node("term",$1->value);$$->children.push_back($1);
 						$$->data_type = _integer;
 						$$->var = $1->value;
+						ic<<giv()<<" = "<<$1->value<<endl;
+						$$->var = gicv();
 					}
 					|
 					FLOATING_POINTS
@@ -1304,6 +1311,10 @@ term 			:	LP expression RP
 						$$ = new Node("term",$1->value);$$->children.push_back($1);
 						$$->data_type = _real;
 						$$->var = $1->value;
+
+						ic<<gfv()<<" = "<<$1->value<<endl;
+						$$->var = gfcv();
+				
 
 					}
 					|
@@ -1400,6 +1411,16 @@ term 			:	LP expression RP
 							}
 							itv(split(va,"[")[0]);
 							itv(split(split(va,"[")[1],"]")[0]);
+						}
+						else{
+							if(ptr->eletype==_integer){
+								ic<<giv()<<" = "<<$1->var<<endl;
+								$1->var = gicv();
+							}
+							if(ptr->eletype==_real){
+								ic<<gfv()<<" = "<<$1->var<<endl;
+								$1->var = gfcv();
+							}
 						}
 						$$->var = $1->var;
 					};
