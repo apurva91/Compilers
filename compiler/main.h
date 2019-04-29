@@ -172,16 +172,22 @@ struct SymbolTable{
 				xyz<<endl;
 		}
 		xyz<<"$}"<<endl;
-		string s1 = xyz.str();
-		string s2 = s1;
-		ReplaceStringInPlace(s1,"\n","");
-		ReplaceStringInPlace(s1,"\t","");
-		ReplaceStringInPlace(s1," ","");
+		string s2 = xyz.str();
 		ReplaceStringInPlace(s2,"$","");
 		ReplaceStringInPlace(s2,"@","");
 		ReplaceStringInPlace(s2,"#","");
 		cout<<s2<<endl;
-		return s1;
+		// string s1 = xyz.str();
+		// ReplaceStringInPlace(s1,"\n","");
+		// ReplaceStringInPlace(s1,"\t","");
+		// ReplaceStringInPlace(s1," ","");
+		// return s1;
+		xyz.str("");
+		for(auto it=functions.begin(); it!= functions.end(); it++){
+			Function * fn = it->second;
+			xyz<<fn->id<<" "<<fn->num_param<<" "<<fn->size<<endl;
+		}
+		return xyz.str();
 
 	}
 	SymbolTable(){increase_level();};

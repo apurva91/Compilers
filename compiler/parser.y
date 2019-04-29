@@ -1432,9 +1432,10 @@ int main(){
 		cout<<ic.str();
 		ofstream out_sym("symtab.txt");
 		out_sym<<symtab.print();
+		out_sym<<"0 0 "<<bytes_g;
 		out_sym.close();
 		cout<<"Global Memory: "<<bytes_g<<endl;
-		SymtabReader();
+		// SymtabReader();
 	}
 	tree_file.open("tree.txt",fstream::out);
 	printTree(root,"\\___");
