@@ -42,9 +42,9 @@
 	Node * node;
 }
 
-%token<node> SEMI EQUAL ADD SUB MUL DIV MOD GT LT GE LE EQ NE OR NOT AND LP RP MAIN LB RB LS RS COLON LIBRARIES COMMA  INT VOID FLOAT FOR WHILE IF ELSE SWITCH CASE DEFAULT BREAK CONTINUE RETURN INTEGERS FLOATING_POINTS IDENTIFIER 
+%token<node> SEMI EQUAL ADD SUB MUL DIV MOD GT LT GE LE EQ NE OR NOT  NEWLINE AND LP RP MAIN LB RB LS RS COLON LIBRARIES COMMA  INT VOID FLOAT FOR WHILE IF ELSE SWITCH CASE DEFAULT BREAK CONTINUE RETURN INTEGERS FLOATING_POINTS IDENTIFIER 
 
-%type<node> start statements statement decl body intializer libraries  switchexp dimlist_var switch_body case_st case_list case_label case_labels INIT paramslist_main paramslist condition post_loop forexp level_increase whileexp ifexp N M function_declaration res_id func_head param_list param param_list_main declaration_list d t l id_arr id_arr_asg dimlist expression sim_exp un_exp dm_exp log_exp and_exp rel_exp op1 op2 op3 term unop
+%type<node> start statements statement decl body intializer libraries switchexp dimlist_var switch_body case_st case_list case_label case_labels INIT paramslist_main paramslist condition post_loop forexp level_increase whileexp ifexp N M function_declaration res_id func_head param_list param param_list_main declaration_list d t l id_arr id_arr_asg dimlist expression sim_exp un_exp dm_exp log_exp and_exp rel_exp op1 op2 op3 term unop
 
 %start start
 
@@ -261,7 +261,6 @@ statement		:	d
 					switchexp switch_body
 					{
 						$$ = new Node("statement","");$$->children.push_back($1);$$->children.push_back($2);
-
 						$$->quadlist = $1->quadlist;
 						$$->quadlist.insert($$->quadlist.end(), $2->quadlist.begin(), $2->quadlist.end());
 
@@ -291,8 +290,22 @@ statement		:	d
 						case_lists.pop_back();
 						itv($1->var);
 
+					}
+					|
+					error SEMI
+					{
+						$$ = new Node("statement","");$$->children.push_back($2);
+					}
+					|
+					error NEWLINE
+					{
+						$$ = new Node("statement","");$$->children.push_back($2);
+					}
+					|
+					error RB
+					{
+						$$ = new Node("statement","");$$->children.push_back($2);
 					};
-
 switchexp		:	SWITCH LP expression RP
 					{
 						breaks.push_back(vector <int> (0));

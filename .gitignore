@@ -58,3 +58,6 @@ parser.output
 a.out
 tree.txt
 inter.txt
+*.tab.h
+*.tab.c
+*.yy.c

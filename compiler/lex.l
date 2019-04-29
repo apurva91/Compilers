@@ -54,7 +54,7 @@
 ([0-9]+\.[0-9]+)	{ yylval.node = new Node("FLOATING_POINTS",yytext); return FLOATING_POINTS; }
 ([A-Za-z_]([A-Za-z0-9_])*) { yylval.node = new Node("IDENTIFIER",yytext); return IDENTIFIER; }
 ([ \t]+) 			{ }
-([\r\n]) 				{ }
+([\r\n]) 				{    }
 "#"[ \t]*"include"[ \t]+(\<[A-za-z_\.\/0-9]+\>|\"[A-za-z_\.\/0-9]+\")	{yylval.node = new Node("LIBRARIES",yytext); return LIBRARIES; }
 .					{cerr<< "TOKEN CANNOT BE MATCHED :\t"<< yytext <<"\t"<<"\t"<<endl; syntax_success = false;}
 
