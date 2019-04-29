@@ -274,7 +274,8 @@ statement		:	d
 								s = ic.str();
 								if(i==0&&j==0) patch_listf[$$->quadlist[0]-1] = count(s.begin(),s.end(),'\n');		
 								patch_listf[count(s.begin(),s.end(),'\n')] = $$->quadlist[i];
-								ic<<"if "<<$1->var<<" == "<<tk[j]<<" goto "<<endl;
+								if(tk[j]!="default")ic<<"if "<<$1->var<<" == "<<tk[j]<<" goto "<<endl;
+								else ic<<"goto "<<endl;
 							}
 						}
 						if(continues[loop_count-1].size()!=0) {
@@ -355,9 +356,10 @@ case_label		:	CASE INTEGERS COLON
 					|
 					DEFAULT COLON
 					{
-						$$ = new Node("case_label","");$$->children.push_back($1);$$->children.push_back($2);;
+						$$ = new Node("case_label","");$$->children.push_back($1);$$->children.push_back($2);
 						$$->var = $1->value;
 						case_defs[loop_count-1]++;
+
 						if(case_defs[loop_count-1]>1){
 							yyerror("cannot use multiple defaults");
 						}
