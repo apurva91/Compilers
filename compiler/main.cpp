@@ -73,6 +73,7 @@ std::vector<std::string> split(std::string str,std::string sep){
     }
     return arr;
 }
+map <int,int> quads;
 
 string backpatch_quad(string s){
 		vector <string> p = split(s,"\n");
@@ -82,6 +83,7 @@ string backpatch_quad(string s){
 				j = patch_list[j];
 			}
 			p[it->first] = p[it->first] + to_string(j+1);
+			quads[j] = 1;
 		}
 		// for(int i=0; i<patch_list.size(); i++){
 		// 	for(int j=0; j<patch_list[i].second.size(); j++){
@@ -90,7 +92,8 @@ string backpatch_quad(string s){
 		// }
 		stringstream tmp;
 		for(int i=0; i<p.size(); i++){
-			tmp<<i+1<<": "<<p[i]<<endl;
+			// tmp<<i+1<<": "<<p[i]<<endl;
+			tmp<<p[i]<<endl;
 		}
 		return tmp.str();
 }
@@ -100,15 +103,20 @@ string backpatch_force(string s){
 		for(auto it=patch_listf.begin(); it!=patch_listf.end(); it++){
 			int j = it->second;
 			p[it->first] = p[it->first] + to_string(j+1);
+			quads[j] = 1;
 		}
 
 		stringstream tmp;
 		for(int i=0; i<p.size(); i++){
+			if(quads.count(i)!=0){
+				tmp<<i+1<<": \n";
+			}
 			tmp<<p[i]<<endl;
 		}
 		return tmp.str();
-
 }
+
+
 
 void ReplaceStringInPlace(std::string& subject, const std::string& search,const std::string& replace) {
     size_t pos = 0;

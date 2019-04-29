@@ -1,15 +1,18 @@
-#include <stdio.h>
+int a;
 
-int a[10][25];
-int b,c,d,e;
-
-int main(){
-	int i,j;
-	if(i==5){	
-		for(i=5; (i<10)||i==j; i=i+1){
-			j = j+1;
-		}
-		int k;
-		k = 5;
+int fib(int x){
+	int b;
+	if(x == 0){
+		b=0;
 	}
+	else{
+		b=x+fib(x-1);
+	}
+	return b;
+}
+int main()
+{
+	int y,r;
+	y = 4;
+	r = fib(y);
 }
