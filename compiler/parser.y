@@ -783,6 +783,7 @@ expression		:	id_arr_asg EQUAL expression
 									if($3->var.rfind("_term",0)==0){
 										$3->var = $3->var.replace(0,5,"");
 									}
+
 									string v = $3->var;
 									if(ptr->eletype != $3->data_type){
 										if($3->data_type==_real){
@@ -796,8 +797,25 @@ expression		:	id_arr_asg EQUAL expression
 											riv($3->var);
 										}
 									}
+									if($1->var.back()==']'){										
+										if(!itcv(v)||v.back()==']'){
+											if($1->data_type==_integer){
+												ic<<giv()<<" = "<<v<<endl;
+												v = gicv();
+											}
+											if($1->data_type==_real){
+												ic<<gfv()<<" = "<<v<<endl;
+												v = gfcv();
+											}
+										}
+									}
+
 									ic<<$1->var<<" = "<<v<<endl;
 									itv($1->var);
+									if($1->var.back()==']'){
+										itv(split($1->var,"[")[0]);
+										itv(split(split($1->var,"[")[1],"]")[0]);
+									}
 									$$->var = v; 
 								}
 							}
@@ -902,9 +920,9 @@ id_arr_asg			: 	IDENTIFIER
 								if(ptr->eletype==_real) size = 4;
 								
 								ic<<tv + " = " + tv + " * " + to_string(size)<<endl;
-								ic<<tv<<" = "<<addr + "[" + tv + "]"<<endl;
-								riv(addr);
-								$$->var = tv;
+								// ic<<tv<<" = "<<addr + "[" + tv + "]"<<endl;
+								// riv(addr);
+								$$->var = addr + "[" + tv + "]";
 							}
 							dimlist.clear();
 						}
@@ -1370,7 +1388,20 @@ term 			:	LP expression RP
 						else{
 							$$->data_type = _error;
 						}
-						$$->var = $1->var;	
+						if($1->var.back()==']'){
+							string va = $1->var;
+							if(ptr->eletype==_integer){
+								ic<<giv()<<" = "<<$1->var<<endl;
+								$1->var = gicv();
+							}
+							if(ptr->eletype==_real){
+								ic<<gfv()<<" = "<<$1->var<<endl;
+								$1->var = gfcv();
+							}
+							itv(split(va,"[")[0]);
+							itv(split(split(va,"[")[1],"]")[0]);
+						}
+						$$->var = $1->var;
 					};
 
 paramslist			:	{ 
