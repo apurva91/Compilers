@@ -1,0 +1,56 @@
+func begin main
+f0 = 2.0
+f.y.2.main = f0
+it0 = 5
+i.x.2.main = it0
+f0 = 0.0
+f.ans.2.main = f0
+it0 = i.x.2.main
+it1 = 4
+it0 = it0 < it1
+if it0 <= 0 goto 31
+goto 13
+13: 
+it0 = 0
+i.i.3.main = it0
+15: 
+it0 = i.i.3.main
+it1 = 5
+it0 = it0 < it1
+if it0 <= 0 goto 47
+goto 25
+20: 
+it0 = i.i.3.main
+it1 = 1
+it0 = it0 + it1
+i.i.3.main = it0
+goto 15
+25: 
+f0 = f.ans.2.main
+f1 = f.y.2.main
+f0 = f0 + f1
+f.ans.2.main = f0
+goto 20
+goto 47
+31: 
+it0 = 0
+i.i.3.main = it0
+33: 
+it0 = i.i.3.main
+it1 = 5
+it0 = it0 < it1
+if it0 <= 0 goto 47
+goto 38
+38: 
+f0 = f.ans.2.main
+f1 = f.y.2.main
+f0 = f0 + f1
+f.ans.2.main = f0
+it0 = i.i.3.main
+it1 = 1
+it0 = it0 + it1
+i.i.3.main = it0
+goto 33
+47: 
+f4 = f.ans.2.main
+func end

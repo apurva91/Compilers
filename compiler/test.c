@@ -1,12 +1,27 @@
-#include <stdio.h>
-
-int c[5][6];
-
-int main(){
-	int t;
-	t=5;
-	if(t<5){
-		return 0;
+int main()
+{
+	float y;
+	y  = 2.0;
+	int x;
+	x = 5;
+	float ans;
+	ans = 0.0;
+	if(x < 4)
+	{
+		int i;
+		for(i=0;i<5;i=i+1)
+		{
+			ans = ans + y;
+		}
 	}
-	
+	else
+	{
+		int i;
+		i = 0;
+		while(i < 5)
+		{
+			ans = ans + y;
+			i = i + 1 ;
+		}
+	}
 }
