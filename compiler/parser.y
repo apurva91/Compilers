@@ -189,8 +189,31 @@ statement		:	d
 					RETURN expression SEMI
 					{
 						$$ = new Node("statement","");$$->children.push_back($1);$$->children.push_back($2);
-						ic<<"return " + $2->var<<endl;
-						if(active_func_ptr->return_type!=$2->data_type){
+						if(active_func_ptr->return_type==$2->data_type){
+							if(!itcv($2->var)){
+								if(active_func_ptr->return_type==_integer){
+									ic<<giv()<<" = "<<$2->var<<endl;
+									$2->var =gicv();
+								}
+								if(active_func_ptr->return_type==_real){
+									ic<<gfv()<<" = "<<$2->var<<endl;
+									$2->var =gfcv();
+								}
+							}
+							ic<<"return " + $2->var<<endl;
+							itv($2->var);
+						}
+						else if(active_func_ptr->return_type==_real&&$2->data_type==_integer){
+							ic<<gfv()<<" = cnvrt_to_float(" + $2->var + ")"<<endl;
+							ic<<"return " + gfcv()<<endl;
+							itv($2->var);
+						}
+						else if(active_func_ptr->return_type==_integer&&$2->data_type==_real){
+							ic<<giv()<<" = cnvrt_to_int(" + $2->var + ")"<<endl;
+							ic<<"return " + gicv()<<endl;
+							itv($2->var);
+						}
+						else{
 							yyerror("Returning illegal data type");
 						}
 					}
@@ -1139,7 +1162,7 @@ un_exp 			: 	unop term
 						if($2->data_type==_integer){
 							$$->var = giv();
 						}
-						ic<<$$->var<<" = "<<$1->value<<" "<<$2->var<<endl;
+						ic<<$$->var<<" = 0 "<<$1->value<<" "<<$2->var<<endl;
 						// ic<<$2->var<<" = "<<$$->var<<endl;;
 						// $$->var = $2->var;
 						if($2->data_type == _integer || $2->data_type == _real){
@@ -1256,6 +1279,14 @@ term 			:	LP expression RP
 						$$ = new Node("term",$1->value);$$->children.push_back($1);
 						$$->data_type = _integer;
 						$$->var = $1->value;
+					}
+					|
+					FLOATING_POINTS
+					{
+						$$ = new Node("term",$1->value);$$->children.push_back($1);
+						$$->data_type = _real;
+						$$->var = $1->value;
+
 					}
 					|
 					IDENTIFIER LP paramslist RP
