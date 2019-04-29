@@ -32,7 +32,10 @@
 	int bytes = 0;
 	int bytes_g = 0; 
 	stringstream xyz;
-
+	vector < pair < string , bool > > int_pool = {make_pair("it0",true),make_pair("it1",true),make_pair("it2",true),make_pair("it3",true),make_pair("it4",true),make_pair("it5",true),make_pair("it6",true),make_pair("it7",true),make_pair("it8",true),make_pair("it9",true)};
+	vector < pair < string , bool > > float_pool = {make_pair("f0",true),make_pair("f1",true),make_pair("f2",true),make_pair("f3",true),make_pair("f4",true)};
+	int int_pool_curr = -1;
+	int float_pool_curr = -1;
 %}
 
 %union{
@@ -114,6 +117,7 @@ statement		:	d
 						if($1->var.rfind("_term",0)==0){
 							yyerror("Invalid syntax, just a term mentioned");
 						}
+						itv($1->var);
 					}
 					|
 					ifexp body N ELSE M body
@@ -261,6 +265,7 @@ statement		:	d
 						loop_count--;
 						case_defs.pop_back();
 						case_lists.pop_back();
+						itv($1->var);
 
 					};
 
@@ -375,6 +380,7 @@ intializer		:	expression SEMI
 						if($1->var.rfind("_term",0)==0){
 							yyerror("Invalid syntax, just a term mentioned");
 						}
+						itv($1->var);
 
 					};
 condition		:	expression SEMI
@@ -404,12 +410,13 @@ post_loop		:	expression
 						if($1->var.rfind("_term",0)==0){
 							yyerror("Invalid syntax, just a term mentioned");
 						}
+						itv($1->var);
+
 
 					};
 whileexp		:	WHILE M LP expression RP
 					{
 						$$ = new Node("whileexp","");$$->children.push_back($1);$$->children.push_back($2);$$->children.push_back($3);$$->children.push_back($4);$$->children.push_back($5);					
-
 							if($4->data_type == _boolean){
 								string s = ic.str();
 								$$->quadlist.push_back(count(s.begin(),s.end(),'\n'));
@@ -479,10 +486,10 @@ declaration_list:	declaration_list decl
 						$$->children.push_back($2);
 					};
 					|
-					decl
+					
 					{
 						$$ = new Node("declaration_list","");
-						$$->children.push_back($1);
+						// $$->children.push_back($1);
 					};
 
 decl			:	d
@@ -726,6 +733,7 @@ dimlist_var			:	expression
 						// ic<<get_var()<<" = "<<$1->var<<endl;
 						// dimlist.insert(dimlist.begin(),(get_curr_var()));
 						dimlist.push_back($4->var);
+						// itv()
 						// dimlist.insert(dimlist.begin(),$1->value);
 					};
 
@@ -755,15 +763,18 @@ expression		:	id_arr_asg EQUAL expression
 									string v = $3->var;
 									if(ptr->eletype != $3->data_type){
 										if($3->data_type==_real){
-											ic<<"it" + get_var()<<" = cnvrt_to_int(" + $3->var + ")"<<endl;
-											v = "it" + get_curr_var();
+											ic<<giv()<<" = cnvrt_to_int(" + $3->var + ")"<<endl;
+											v = gicv();
+											rfv($3->var);
 										}
 										else if($3->data_type==_integer){
-											ic<<"f" + get_var()<<" = cnvrt_to_float(" + $3->var + ")"<<endl;
-											v = "f" + get_curr_var();
+											ic<<gfv()<<" = cnvrt_to_float(" + $3->var + ")"<<endl;
+											v = gfcv();
+											riv($3->var);
 										}
 									}
 									ic<<$1->var<<" = "<<v<<endl;
+									itv($1->var);
 									$$->var = v; 
 								}
 							}
@@ -775,8 +786,8 @@ expression		:	id_arr_asg EQUAL expression
 						$$ = new Node("expression","");
 						$$->data_type = $1->data_type;
 						$$->children.push_back($1);		
-						$$->var = "_term" + $1->var;	
-												$$->truelist = $1->truelist;
+						$$->var = "_term" + $1->var;
+						$$->truelist = $1->truelist;
 						$$->falselist = $1->falselist;
 			
 					};
@@ -841,8 +852,8 @@ id_arr_asg			: 	IDENTIFIER
 								$$->data_type = _error;
 							}
 							else{
-								string tv = "it" + get_var();
-
+								string tv = giv();
+								// string tv = "it" + get_var();
 								string addr = tv;
 								if(ptr->level!=1){									
 									if(ptr->eletype==_real){
@@ -853,21 +864,24 @@ id_arr_asg			: 	IDENTIFIER
 									}
 								}
 								else{
-									ic<<tv<<"addr(#" + to_string(active_func_ptr->get_param_num(ptr->id))<<endl;
+									ic<<tv<<" = addr(#" + to_string(active_func_ptr->get_param_num(ptr->id))<<endl;
 								}
+
 								tv = dimlist[0];
+								string x = giv();
 								for(int i=1; i<ptr->dimlist.size(); i++){
-									ic<<"it" + get_var()<<" = "<< tv <<" * "<<ptr->dimlist[i]<<endl;
-									tv = "it" + get_curr_var();
-									ic<<"it" + get_var()<<" = "<<tv<<" + "<<dimlist[i]<<endl;
-									tv = "it" + get_curr_var();
+									ic<<gicv()<<" = "<< tv <<" * "<<ptr->dimlist[i]<<endl;
+									tv = gicv();
+									ic<<gicv()<<" = "<<gicv()<<" + "<<dimlist[i]<<endl;
+									tv = gicv();
 								}
 								int size = 4;
-								if(ptr->eletype==_real) size = 8;
+								if(ptr->eletype==_real) size = 4;
 								
-								ic<<"it" + get_var() + " = " + tv + " * " + to_string(size)<<endl;
-								tv = "it" + get_curr_var();
-								$$->var = addr + "[" + tv + "]";
+								ic<<tv + " = " + tv + " * " + to_string(size)<<endl;
+								ic<<tv<<" = "<<addr + "[" + tv + "]"<<endl;
+								riv(addr);
+								$$->var = tv;
 							}
 							dimlist.clear();
 						}
@@ -885,6 +899,7 @@ log_exp 		:	log_exp OR M and_exp
 								$$->data_type = _boolean;
 								// $$->var =  "it" + get_var();
 								// ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<$4->var<<endl;	
+
 							}
 							patch_quad_force($3->quadlist[0], $1->falselist);
 							$$->truelist = $1->truelist;
@@ -955,31 +970,34 @@ rel_exp 		:	rel_exp op3 sim_exp
 								Type tt = get_type($1->data_type, $3->data_type);
 								if(tt == _integer || tt == _real){
 									if($1->data_type==$3->data_type){
+										itv($1->var);
+										itv($3->var);
 										if($1->data_type==_real){
-											$$->var = "f" + get_var();
+											$$->var = gfv();
 										}
 										if($1->data_type==_integer){
-											$$->var = "it" + get_var();
+											$$->var = giv();
 										}
 										ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<$3->var<<endl;
 									}
 									else{
 										if($1->data_type==_real){
-											string tv = "f" + get_var();
+											string tv = gfv();
 											ic<<tv<<" = cnvrt_to_float("<<$1->var<<")\n";
-											$$->var = "f" + get_var();
+											$$->var = tv;
 											ic<<$$->var<<" = "<<tv<<" "<<$2->value<<" "<<$3->var<<endl;
 										}
 										else{
-											string tv = "f" + get_var();
+											string tv = gfv();
 											ic<<tv<<" = cnvrt_to_float("<<$3->var<<")\n";
-											$$->var = "f" + get_var();
-											ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<tv<<endl;
+											$$->var = tv;
+											ic<<tv<<" = "<<$1->var<<" "<<$2->value<<" "<<tv<<endl;
 										}
 									}
 									string s = ic.str();
 									$$->falselist.push_back(count(s.begin(),s.end(),'\n'));
 									ic<<"if "<<$$->var<<" <= 0 goto "<<endl;
+									itv($$->var);
 									s = ic.str();
 									$$->truelist.push_back(count(s.begin(),s.end(),'\n'));
 									ic<<"goto "<<endl;
@@ -1010,26 +1028,28 @@ sim_exp 		:	sim_exp op1 dm_exp
 							if(tt == _integer || tt == _real){
 								$$->data_type = tt;
 								if($1->data_type==$3->data_type){
+										itv($1->var);
+										itv($3->var);
 										if($1->data_type==_real){
-											$$->var = "f" + get_var();
+											$$->var = gfv();
 										}
 										if($1->data_type==_integer){
-											$$->var = "it" + get_var();
+											$$->var = giv();
 										}
 									ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<$3->var<<endl;
 								}
 								else{
 									if($1->data_type==_real){
-										string tv = "f" + get_var();
+										string tv = gfv();
 										ic<<tv<<" = cnvrt_to_float("<<$1->var<<")\n";
-										$$->var = "f" + get_var();
+										$$->var = tv;
 										ic<<$$->var<<" = "<<tv<<" "<<$2->value<<" "<<$3->var<<endl;
 									}
 									else{
-										string tv = "f" + get_var();
+										string tv = gfv();
 										ic<<tv<<" = cnvrt_to_float("<<$3->var<<")\n";
-										$$->var = "f" + get_var();
-										ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<tv<<endl;
+										$$->var = tv;
+										ic<<tv<<" = "<<$1->var<<" "<<$2->value<<" "<<tv<<endl;
 									}
 								}
 							}
@@ -1063,26 +1083,28 @@ dm_exp 			: 	dm_exp op2 un_exp
 							if(tt == _integer || tt == _real){
 								$$->data_type = tt;
 								if($1->data_type==$3->data_type){
+										itv($1->var);
+										itv($3->var);
 										if($1->data_type==_real){
-											$$->var = "f" + get_var();
+											$$->var = gfv();
 										}
 										if($1->data_type==_integer){
-											$$->var = "it" + get_var();
+											$$->var = giv();
 										}
 									ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<$3->var<<endl;
 								}
 								else{
 									if($1->data_type==_real){
-										string tv = "f" + get_var();
+										string tv = gfv();
 										ic<<tv<<" = cnvrt_to_float("<<$1->var<<")\n";
-										$$->var = "f" + get_var();
+										$$->var = tv;
 										ic<<$$->var<<" = "<<tv<<" "<<$2->value<<" "<<$3->var<<endl;
 									}
 									else{
-										string tv = "f" + get_var();
+										string tv = gfv();
 										ic<<tv<<" = cnvrt_to_float("<<$3->var<<")\n";
-										$$->var = "f" + get_var();
-										ic<<$$->var<<" = "<<$1->var<<" "<<$2->value<<" "<<tv<<endl;
+										$$->var = tv;
+										ic<<tv<<" = "<<$1->var<<" "<<$2->value<<" "<<tv<<endl;
 									}
 								}
 							}
@@ -1110,12 +1132,13 @@ dm_exp 			: 	dm_exp op2 un_exp
 un_exp 			: 	unop term
 					{
 						$$ = new Node("un_exp",$1->value + $2->value);$$->children.push_back($1);$$->children.push_back($2);
-										if($2->data_type==_real){
-											$$->var = "f" + get_var();
-										}
-										if($2->data_type==_integer){
-											$$->var = "it" + get_var();
-										}
+						itv($2->var);
+						if($2->data_type==_real){
+							$$->var = gfv();
+						}
+						if($2->data_type==_integer){
+							$$->var = giv();
+						}
 						ic<<$$->var<<" = "<<$1->value<<" "<<$2->var<<endl;
 						// ic<<$2->var<<" = "<<$$->var<<endl;;
 						// $$->var = $2->var;
@@ -1243,17 +1266,20 @@ term 			:	LP expression RP
 						$$->children.push_back($3);
 						$$->children.push_back($4);
 						call_func_ptr = symtab.search_function($1->value);
+						// ic<<int_pool<<endl;
 						if(call_func_ptr){
 							if(call_func_ptr->num_param==params.size()){
 								for(int i=0; i<params.size(); i++){
 									if(params[i].second!=call_func_ptr->parameters[i]->eletype){
 										if(params[i].second == _real&&call_func_ptr->parameters[i]->eletype == _integer){
-											ic<<"it" + get_var()<<" = cnvrt_to_int("+params[i].first+")"<<endl;
-											params[i].first = "it" + get_curr_var();
+											itv(params[i].first);
+											ic<<giv()<<" = cnvrt_to_int("+params[i].first+")"<<endl;
+											params[i].first = gicv();
 										}
 										else if(params[i].second == _integer&&call_func_ptr->parameters[i]->eletype == _real){
-											ic<<"f" + get_var()<<" = cnvrt_to_float("+params[i].first+")"<<endl;
-											params[i].first = "f" + get_curr_var();										
+											itv(params[i].first);
+											ic<<gfv()<<" = cnvrt_to_float("+params[i].first+")"<<endl;
+											params[i].first = gfcv();										
 										}
 										else{
 											yyerror("Function's " + to_string(i+1) + " parameter is " + _type[call_func_ptr->parameters[i]->eletype] + " while passed is " + _type[params[i].second]);
@@ -1261,14 +1287,14 @@ term 			:	LP expression RP
 									}									
 								}
 								for(int i=0; i<params.size(); i++){
-									if(isdigit(params[i].first[0])||params[i].first[1]=='.'||params[i].first[0]=='_'){
+									if(!itcv(params[i].first)){
 										if(params[i].second==_integer){
-											ic<<"it" + get_var()<<" = "<<params[i].first<<endl;
-											params[i].first ="it" + get_curr_var();
+											ic<<giv()<<" = "<<params[i].first<<endl;
+											params[i].first =gicv();
 										}
 										if(params[i].second==_real){
-											ic<<"f" + get_var()<<" = "<<params[i].first<<endl;
-											params[i].first ="f" + get_curr_var();
+											ic<<gfv()<<" = "<<params[i].first<<endl;
+											params[i].first =gfcv();
 										}
 									}
 								}
@@ -1276,13 +1302,16 @@ term 			:	LP expression RP
 									ic<<"param "<<params[i].first<<endl;
 								}
 								if(call_func_ptr->return_type==_real){
-									$$->var = "f" + get_var();
+									$$->var = gfv();
 								}
 								if(call_func_ptr->return_type==_integer){
-									$$->var = "it" + get_var();
+									$$->var = giv();
 								}
 								ic<<"refparam "<<$$->var<<endl;
 								ic<<"call "<<call_func_ptr->id<<", "<<params.size()+1<<endl;
+								for(int i=0; i<params.size(); i++){
+									itv(params[i].first);
+								}
 								$$->data_type = call_func_ptr->return_type;
 							}
 							else{
@@ -1294,6 +1323,8 @@ term 			:	LP expression RP
 								$$->data_type = _error;
 							yyerror("Function " + $1->value + " not declared.");
 						}
+						// ic<<int_pool<<endl;
+
 						call_func_ptr = NULL;	
 						params.clear();
 					}
@@ -1435,6 +1466,8 @@ int main(){
 		out_sym<<"0 0 "<<bytes_g;
 		out_sym.close();
 		cout<<"Global Memory: "<<bytes_g<<endl;
+		cout<<int_pool<<endl;
+		cout<<float_pool<<endl;	
 		// SymtabReader();
 	}
 	tree_file.open("tree.txt",fstream::out);

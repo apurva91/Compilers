@@ -19,11 +19,20 @@ extern int level;
 extern int var_num;
 extern stringstream xyz;
 extern int yylineno;
+extern int int_pool_curr;
+extern int float_pool_curr;
+extern vector < pair < string, bool > > float_pool, int_pool;
+extern int yylineno;
 const vector <string> _type = {"integer", "real", "error", "none", "simple", "array", "function","boolean","void"};
 
-
+void itv(string s);
+bool itcv(string s);
 string get_var();
 string get_curr_var();
+string giv(), gicv();
+void riv(string name);
+void rfv(string name);
+string gfv(), gfcv();
 bool is_number(string s);
 Type get_type(Type a, Type b);
 string backpatch_quad(string str);
@@ -41,6 +50,11 @@ template <class A> ostream& operator << (ostream& out, const vector<A> &v) {
 		if(i) out << ", ";
 		out << v[i];
 	}
+	return out << "]";
+}
+
+template <class A, class B> ostream& operator << (ostream& out, const pair<A,B> &v) {
+	out << "["<<v.first<<","<<v.second;
 	return out << "]";
 }
 

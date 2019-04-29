@@ -19,6 +19,77 @@ string get_curr_var(){
 	return  to_string(var_num);
 }
 
+string gfv(){
+	for(int i=0; i<float_pool.size(); i++){
+		if(float_pool[i].second){
+			float_pool_curr = i;
+			float_pool[i].second = false;
+			return float_pool[i].first;
+		}
+	}
+	return "Exceeds";
+}
+
+string gfcv(){
+	return "f" + to_string(float_pool_curr);  
+}
+
+void rfv(string name){
+	for(int i=0; i<float_pool.size(); i++){
+		if(!float_pool[i].second&&float_pool[i].first==name){
+			float_pool[i].second = true;
+			float_pool_curr = -1;
+		}
+	}
+}
+
+string giv(){
+	for(int i=0; i<int_pool.size(); i++){
+		if(int_pool[i].second){
+			int_pool_curr = i;
+			int_pool[i].second = false;
+			return int_pool[i].first;
+		}
+	}
+	return "Exceeds";
+}
+
+string gicv(){
+	return "it" + to_string(int_pool_curr);  
+}
+
+void itv(string s){
+	string p = s;
+	ReplaceStringInPlace(p,"_term","");
+	if(p[1]=='t'||p[1]=='i'){
+		riv(p);
+	}
+	if(p[0]=='f'&&isdigit(p[1])){
+		rfv(p);
+	}
+}
+
+bool itcv(string s){
+		string p = s;
+	ReplaceStringInPlace(p,"_term","");
+	if(p[1]=='t'||p[1]=='i'){
+		return true;
+	}
+	if(p[0]=='f'&&isdigit(p[1])){
+		return true;
+	}
+	return false;
+}
+
+void riv(string name){
+	for(int i=0; i<int_pool.size(); i++){
+		if(!int_pool[i].second&&int_pool[i].first==name){
+			int_pool[i].second = true;
+			int_pool_curr = -1;
+		}
+	}
+}
+
 bool is_number(string s){
 	return (!s.empty() && s.find_first_not_of("0123456789") == std::string::npos);
 }
