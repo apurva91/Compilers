@@ -118,6 +118,10 @@ statement		:	d
 							yyerror("Invalid syntax, just a term mentioned");
 						}
 						itv($1->var);
+						if($1->var.back()==']'){		
+							itv(split($1->var,"[")[0]);
+							itv(split(split($1->var,"[")[1],"]")[0]);
+						}
 					}
 					|
 					ifexp body N ELSE M body
@@ -915,11 +919,15 @@ id_arr_asg			: 	IDENTIFIER
 
 								tv = dimlist[0];
 								string x = giv();
+								// itv(dimlist[0]);
+								itv(dimlist[0]);
+								string curr = x;
 								for(int i=1; i<ptr->dimlist.size(); i++){
-									ic<<gicv()<<" = "<< tv <<" * "<<ptr->dimlist[i]<<endl;
-									tv = gicv();
-									ic<<gicv()<<" = "<<gicv()<<" + "<<dimlist[i]<<endl;
-									tv = gicv();
+									ic<<x<<" = "<< tv <<" * "<<ptr->dimlist[i]<<endl;
+									tv = x;
+									ic<<x<<" = "<<x<<" + "<<dimlist[i]<<endl;
+									tv = x;
+									itv(dimlist[i]);
 								}
 								int size = 4;
 								if(ptr->eletype==_real) size = 4;
@@ -1558,8 +1566,8 @@ int main(){
 		// out_sym<<"0 0 "<<bytes_g;
 		out_sym.close();
 		// cout<<"Global Memory: "<<bytes_g<<endl;
-		// cout<<int_pool<<endl;
-		// cout<<float_pool<<endl;	
+		cout<<int_pool<<endl;
+		cout<<float_pool<<endl;	
 		// SymtabReader();
 	}
 	tree_file.open("tree.txt",fstream::out);
