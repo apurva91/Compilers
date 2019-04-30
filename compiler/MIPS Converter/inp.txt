@@ -1,66 +1,35 @@
+func begin fib
+it0 = #1
+it1 = 1
+it0 = it0 == it1
+if it0 <= 0 goto 10
+goto 7
+7: 
+it0 = 1
+i.b.2.fib = it0
+goto 21
+10: 
+it0 = #1
+it1 = 1
+it0 = it0 - it1
+param it0
+refparam it1
+call fib, 2
+i.b.2.fib = it1
+it0 = i.b.2.fib
+it1 = #1
+it0 = it0 * it1
+i.b.2.fib = it0
+21: 
+it0 = i.b.2.fib
+return it0
+func end
 func begin main
-it0 = 7
-i.m.2.main = it0
-i.n.2.main = it0
-i.ar[49].2.main
-it0 = 0
-i.i.2.main = it0
-8: 
-it0 = i.i.2.main
-it1 = i.n.2.main
-it0 = it0 < it1
-if it0 <= 0 goto 42
-goto 18
-13: 
-it0 = i.i.2.main
-it1 = 1
-it0 = it0 + it1
-i.i.2.main = it0
-goto 8
-18: 
-it0 = 0
-i.j.2.main = it0
-20: 
-it0 = i.j.2.main
-it1 = i.m.2.main
-it0 = it0 < it1
-if it0 <= 0 goto 13
-goto 30
-25: 
-it0 = i.j.2.main
-it1 = 1
-it0 = it0 + it1
-i.j.2.main = it0
-goto 20
-30: 
-it0 = i.i.2.main
-it1 = i.j.2.main
-it2 = addr(i.ar.2.main)
-it3 = it0 * 7
-it3 = it3 + it1
-it3 = it3 * 4
-it4 = i.i.2.main
-it5 = i.j.2.main
-it4 = it4 * it5
-it2[it3] = it4
-goto 25
-goto 13
-42: 
-it2 = 1
-it3 = 2
-it4 = addr(i.ar.2.main)
-it5 = it2 * 7
-it5 = it5 + it3
-it5 = it5 * 4
-it6 = it4[it5]
-i.c.2.main = it6
-it9 = it6
-it4 = 6
-it5 = 6
-it6 = addr(i.ar.2.main)
-it7 = it4 * 7
-it7 = it7 + it5
-it7 = it7 * 4
-it8 = it6[it7]
-i.c.2.main = it8
+it0 = 5
+i.y.2.main = it0
+it0 = i.y.2.main
+param it0
+refparam it1
+call fib, 2
+i.r.2.main = it1
 func end

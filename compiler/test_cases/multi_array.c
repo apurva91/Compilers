@@ -12,5 +12,4 @@ int main(){
 	int c;
 	c = ar[1][2];
 	c = ar[6][6];
-
 }

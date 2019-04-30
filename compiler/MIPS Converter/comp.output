@@ -1,0 +1,1305 @@
+Grammar
+
+    0 $accept: statements $end
+
+    1 statements: statements NEWLINE statement
+    2           | statement
+
+    3 statement: NUM COLON
+    4          | FUNC BEGI FUNC_NAME
+    5          | FUNC END
+    6          | INT_VAR ASSIGN NUM
+    7          | INT_VAR ASSIGN INT_VAR
+    8          | INT_VAR ASSIGN HASH NUM
+    9          | TEMP ASSIGN HASH NUM
+   10          | FLOAT_VAR ASSIGN FLOAT_NUM
+   11          | HASH NUM ASSIGN NUM
+   12          | HASH NUM ASSIGN FLOAT_NUM
+   13          | HASH NUM ASSIGN TEMP
+   14          | HASH NUM ASSIGN FLOAT_TEMP
+   15          | HASH NUM ASSIGN INT_VAR
+   16          | HASH NUM ASSIGN FLOAT_VAR
+   17          | TEMP ASSIGN INT_VAR
+   18          | FLOAT_TEMP ASSIGN FLOAT_VAR
+   19          | INT_VAR ASSIGN TEMP
+   20          | FLOAT_VAR ASSIGN FLOAT_TEMP
+   21          | TEMP ASSIGN TEMP
+   22          | FLOAT_TEMP ASSIGN FLOAT_TEMP
+   23          | TEMP ASSIGN NUM
+   24          | FLOAT_TEMP ASSIGN FLOAT_NUM
+   25          | GOTO NUM
+   26          | TEMP ASSIGN INT_VAR COMPARE NUM
+   27          | TEMP ASSIGN FLOAT_VAR COMPARE FLOAT_NUM
+   28          | TEMP ASSIGN HASH NUM COMPARE NUM
+   29          | TEMP ASSIGN HASH NUM COMPARE FLOAT_NUM
+   30          | TEMP ASSIGN HASH NUM COMPARE TEMP
+   31          | TEMP ASSIGN HASH NUM COMPARE FLOAT_TEMP
+   32          | TEMP ASSIGN TEMP COMPARE NUM
+   33          | TEMP ASSIGN FLOAT_TEMP COMPARE FLOAT_NUM
+   34          | TEMP ASSIGN INT_VAR COMPARE TEMP
+   35          | TEMP ASSIGN FLOAT_VAR COMPARE FLOAT_TEMP
+   36          | TEMP ASSIGN TEMP COMPARE TEMP
+   37          | TEMP ASSIGN FLOAT_TEMP COMPARE FLOAT_TEMP
+   38          | IF TEMP COMPARE NUM GOTO NUM
+   39          | IF TEMP COMPARE TEMP GOTO NUM
+   40          | IF INT_VAR COMPARE NUM GOTO NUM
+   41          | IF FLOAT_TEMP COMPARE FLOAT_TEMP GOTO NUM
+   42          | TEMP ASSIGN HASH NUM OPERATOR NUM
+   43          | TEMP ASSIGN HASH NUM OPERATOR TEMP
+   44          | TEMP ASSIGN HASH NUM OPERATOR HASH NUM
+   45          | TEMP ASSIGN INT_VAR OPERATOR NUM
+   46          | TEMP ASSIGN INT_VAR OPERATOR INT_VAR
+   47          | FLOAT_TEMP ASSIGN FLOAT_VAR OPERATOR FLOAT_VAR
+   48          | TEMP ASSIGN INT_VAR OPERATOR TEMP
+   49          | TEMP ASSIGN TEMP OPERATOR NUM
+   50          | TEMP ASSIGN TEMP OPERATOR INT_VAR
+   51          | TEMP ASSIGN TEMP OPERATOR TEMP
+   52          | FLOAT_TEMP ASSIGN FLOAT_TEMP OPERATOR FLOAT_TEMP
+   53          | TEMP ASSIGN NUM OPERATOR NUM
+   54          | TEMP ASSIGN NUM OPERATOR INT_VAR
+   55          | TEMP ASSIGN NUM OPERATOR TEMP
+   56          | PARAM TEMP
+   57          | PARAM FLOAT_TEMP
+   58          | PARAM INT_VAR
+   59          | REFPARAM TEMP
+   60          | REFPARAM FLOAT_TEMP
+   61          | CALL FUNC_NAME COMMA NUM
+   62          | RETURN TEMP
+   63          | RETURN FLOAT_TEMP
+   64          | RETURN INT_VAR
+   65          | RETURN NUM
+   66          | ARRAY_DECL
+   67          | TEMP ASSIGN ADDR LB INT_VAR RB
+   68          | TEMP SQL TEMP SQR ASSIGN TEMP
+   69          | TEMP ASSIGN TEMP SQL TEMP SQR
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+error (256)
+FUNC (258) 4 5
+GOTO (259) 25 38 39 40 41
+BEGI (260) 4
+RETURN (261) 62 63 64 65
+PARAM (262) 56 57 58
+REFPARAM (263) 59 60
+END (264) 5
+CALL (265) 61
+COMMA (266) 61
+ASSIGN (267) 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 26
+    27 28 29 30 31 32 33 34 35 36 37 42 43 44 45 46 47 48 49 50 51
+    52 53 54 55 67 68 69
+TEMP (268) 9 13 17 19 21 23 26 27 28 29 30 31 32 33 34 35 36 37 38
+    39 42 43 44 45 46 48 49 50 51 53 54 55 56 59 62 67 68 69
+INT_VAR (269) 6 7 8 15 17 19 26 34 40 45 46 48 50 54 58 64 67
+FUNC_NAME (270) 4 61
+COMPARE (271) 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41
+OPERATOR (272) 42 43 44 45 46 47 48 49 50 51 52 53 54 55
+NUM (273) 3 6 8 9 11 12 13 14 15 16 23 25 26 28 29 30 31 32 38 39 40
+    41 42 43 44 45 49 53 54 55 61 65
+NEWLINE (274) 1
+COLON (275) 3
+IF (276) 38 39 40 41
+SQR (277) 68 69
+SQL (278) 68 69
+LB (279) 67
+RB (280) 67
+HASH (281) 8 9 11 12 13 14 15 16 28 29 30 31 42 43 44
+ADDR (282) 67
+ARRAY_DECL (283) 66
+FLOAT_VAR (284) 10 16 18 20 27 35 47
+FLOAT_TEMP (285) 14 18 20 22 24 31 33 35 37 41 47 52 57 60 63
+FLOAT_NUM (286) 10 12 24 27 29 33
+
+
+Nonterminals, with rules where they appear
+
+$accept (32)
+    on left: 0
+statements (33)
+    on left: 1 2, on right: 0 1
+statement (34)
+    on left: 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23
+    24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44
+    45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65
+    66 67 68 69, on right: 1 2
+
+
+State 0
+
+    0 $accept: . statements $end
+
+    FUNC        shift, and go to state 1
+    GOTO        shift, and go to state 2
+    RETURN      shift, and go to state 3
+    PARAM       shift, and go to state 4
+    REFPARAM    shift, and go to state 5
+    CALL        shift, and go to state 6
+    TEMP        shift, and go to state 7
+    INT_VAR     shift, and go to state 8
+    NUM         shift, and go to state 9
+    IF          shift, and go to state 10
+    HASH        shift, and go to state 11
+    ARRAY_DECL  shift, and go to state 12
+    FLOAT_VAR   shift, and go to state 13
+    FLOAT_TEMP  shift, and go to state 14
+
+    statements  go to state 15
+    statement   go to state 16
+
+
+State 1
+
+    4 statement: FUNC . BEGI FUNC_NAME
+    5          | FUNC . END
+
+    BEGI  shift, and go to state 17
+    END   shift, and go to state 18
+
+
+State 2
+
+   25 statement: GOTO . NUM
+
+    NUM  shift, and go to state 19
+
+
+State 3
+
+   62 statement: RETURN . TEMP
+   63          | RETURN . FLOAT_TEMP
+   64          | RETURN . INT_VAR
+   65          | RETURN . NUM
+
+    TEMP        shift, and go to state 20
+    INT_VAR     shift, and go to state 21
+    NUM         shift, and go to state 22
+    FLOAT_TEMP  shift, and go to state 23
+
+
+State 4
+
+   56 statement: PARAM . TEMP
+   57          | PARAM . FLOAT_TEMP
+   58          | PARAM . INT_VAR
+
+    TEMP        shift, and go to state 24
+    INT_VAR     shift, and go to state 25
+    FLOAT_TEMP  shift, and go to state 26
+
+
+State 5
+
+   59 statement: REFPARAM . TEMP
+   60          | REFPARAM . FLOAT_TEMP
+
+    TEMP        shift, and go to state 27
+    FLOAT_TEMP  shift, and go to state 28
+
+
+State 6
+
+   61 statement: CALL . FUNC_NAME COMMA NUM
+
+    FUNC_NAME  shift, and go to state 29
+
+
+State 7
+
+    9 statement: TEMP . ASSIGN HASH NUM
+   17          | TEMP . ASSIGN INT_VAR
+   21          | TEMP . ASSIGN TEMP
+   23          | TEMP . ASSIGN NUM
+   26          | TEMP . ASSIGN INT_VAR COMPARE NUM
+   27          | TEMP . ASSIGN FLOAT_VAR COMPARE FLOAT_NUM
+   28          | TEMP . ASSIGN HASH NUM COMPARE NUM
+   29          | TEMP . ASSIGN HASH NUM COMPARE FLOAT_NUM
+   30          | TEMP . ASSIGN HASH NUM COMPARE TEMP
+   31          | TEMP . ASSIGN HASH NUM COMPARE FLOAT_TEMP
+   32          | TEMP . ASSIGN TEMP COMPARE NUM
+   33          | TEMP . ASSIGN FLOAT_TEMP COMPARE FLOAT_NUM
+   34          | TEMP . ASSIGN INT_VAR COMPARE TEMP
+   35          | TEMP . ASSIGN FLOAT_VAR COMPARE FLOAT_TEMP
+   36          | TEMP . ASSIGN TEMP COMPARE TEMP
+   37          | TEMP . ASSIGN FLOAT_TEMP COMPARE FLOAT_TEMP
+   42          | TEMP . ASSIGN HASH NUM OPERATOR NUM
+   43          | TEMP . ASSIGN HASH NUM OPERATOR TEMP
+   44          | TEMP . ASSIGN HASH NUM OPERATOR HASH NUM
+   45          | TEMP . ASSIGN INT_VAR OPERATOR NUM
+   46          | TEMP . ASSIGN INT_VAR OPERATOR INT_VAR
+   48          | TEMP . ASSIGN INT_VAR OPERATOR TEMP
+   49          | TEMP . ASSIGN TEMP OPERATOR NUM
+   50          | TEMP . ASSIGN TEMP OPERATOR INT_VAR
+   51          | TEMP . ASSIGN TEMP OPERATOR TEMP
+   53          | TEMP . ASSIGN NUM OPERATOR NUM
+   54          | TEMP . ASSIGN NUM OPERATOR INT_VAR
+   55          | TEMP . ASSIGN NUM OPERATOR TEMP
+   67          | TEMP . ASSIGN ADDR LB INT_VAR RB
+   68          | TEMP . SQL TEMP SQR ASSIGN TEMP
+   69          | TEMP . ASSIGN TEMP SQL TEMP SQR
+
+    ASSIGN  shift, and go to state 30
+    SQL     shift, and go to state 31
+
+
+State 8
+
+    6 statement: INT_VAR . ASSIGN NUM
+    7          | INT_VAR . ASSIGN INT_VAR
+    8          | INT_VAR . ASSIGN HASH NUM
+   19          | INT_VAR . ASSIGN TEMP
+
+    ASSIGN  shift, and go to state 32
+
+
+State 9
+
+    3 statement: NUM . COLON
+
+    COLON  shift, and go to state 33
+
+
+State 10
+
+   38 statement: IF . TEMP COMPARE NUM GOTO NUM
+   39          | IF . TEMP COMPARE TEMP GOTO NUM
+   40          | IF . INT_VAR COMPARE NUM GOTO NUM
+   41          | IF . FLOAT_TEMP COMPARE FLOAT_TEMP GOTO NUM
+
+    TEMP        shift, and go to state 34
+    INT_VAR     shift, and go to state 35
+    FLOAT_TEMP  shift, and go to state 36
+
+
+State 11
+
+   11 statement: HASH . NUM ASSIGN NUM
+   12          | HASH . NUM ASSIGN FLOAT_NUM
+   13          | HASH . NUM ASSIGN TEMP
+   14          | HASH . NUM ASSIGN FLOAT_TEMP
+   15          | HASH . NUM ASSIGN INT_VAR
+   16          | HASH . NUM ASSIGN FLOAT_VAR
+
+    NUM  shift, and go to state 37
+
+
+State 12
+
+   66 statement: ARRAY_DECL .
+
+    $default  reduce using rule 66 (statement)
+
+
+State 13
+
+   10 statement: FLOAT_VAR . ASSIGN FLOAT_NUM
+   20          | FLOAT_VAR . ASSIGN FLOAT_TEMP
+
+    ASSIGN  shift, and go to state 38
+
+
+State 14
+
+   18 statement: FLOAT_TEMP . ASSIGN FLOAT_VAR
+   22          | FLOAT_TEMP . ASSIGN FLOAT_TEMP
+   24          | FLOAT_TEMP . ASSIGN FLOAT_NUM
+   47          | FLOAT_TEMP . ASSIGN FLOAT_VAR OPERATOR FLOAT_VAR
+   52          | FLOAT_TEMP . ASSIGN FLOAT_TEMP OPERATOR FLOAT_TEMP
+
+    ASSIGN  shift, and go to state 39
+
+
+State 15
+
+    0 $accept: statements . $end
+    1 statements: statements . NEWLINE statement
+
+    $end     shift, and go to state 40
+    NEWLINE  shift, and go to state 41
+
+
+State 16
+
+    2 statements: statement .
+
+    $default  reduce using rule 2 (statements)
+
+
+State 17
+
+    4 statement: FUNC BEGI . FUNC_NAME
+
+    FUNC_NAME  shift, and go to state 42
+
+
+State 18
+
+    5 statement: FUNC END .
+
+    $default  reduce using rule 5 (statement)
+
+
+State 19
+
+   25 statement: GOTO NUM .
+
+    $default  reduce using rule 25 (statement)
+
+
+State 20
+
+   62 statement: RETURN TEMP .
+
+    $default  reduce using rule 62 (statement)
+
+
+State 21
+
+   64 statement: RETURN INT_VAR .
+
+    $default  reduce using rule 64 (statement)
+
+
+State 22
+
+   65 statement: RETURN NUM .
+
+    $default  reduce using rule 65 (statement)
+
+
+State 23
+
+   63 statement: RETURN FLOAT_TEMP .
+
+    $default  reduce using rule 63 (statement)
+
+
+State 24
+
+   56 statement: PARAM TEMP .
+
+    $default  reduce using rule 56 (statement)
+
+
+State 25
+
+   58 statement: PARAM INT_VAR .
+
+    $default  reduce using rule 58 (statement)
+
+
+State 26
+
+   57 statement: PARAM FLOAT_TEMP .
+
+    $default  reduce using rule 57 (statement)
+
+
+State 27
+
+   59 statement: REFPARAM TEMP .
+
+    $default  reduce using rule 59 (statement)
+
+
+State 28
+
+   60 statement: REFPARAM FLOAT_TEMP .
+
+    $default  reduce using rule 60 (statement)
+
+
+State 29
+
+   61 statement: CALL FUNC_NAME . COMMA NUM
+
+    COMMA  shift, and go to state 43
+
+
+State 30
+
+    9 statement: TEMP ASSIGN . HASH NUM
+   17          | TEMP ASSIGN . INT_VAR
+   21          | TEMP ASSIGN . TEMP
+   23          | TEMP ASSIGN . NUM
+   26          | TEMP ASSIGN . INT_VAR COMPARE NUM
+   27          | TEMP ASSIGN . FLOAT_VAR COMPARE FLOAT_NUM
+   28          | TEMP ASSIGN . HASH NUM COMPARE NUM
+   29          | TEMP ASSIGN . HASH NUM COMPARE FLOAT_NUM
+   30          | TEMP ASSIGN . HASH NUM COMPARE TEMP
+   31          | TEMP ASSIGN . HASH NUM COMPARE FLOAT_TEMP
+   32          | TEMP ASSIGN . TEMP COMPARE NUM
+   33          | TEMP ASSIGN . FLOAT_TEMP COMPARE FLOAT_NUM
+   34          | TEMP ASSIGN . INT_VAR COMPARE TEMP
+   35          | TEMP ASSIGN . FLOAT_VAR COMPARE FLOAT_TEMP
+   36          | TEMP ASSIGN . TEMP COMPARE TEMP
+   37          | TEMP ASSIGN . FLOAT_TEMP COMPARE FLOAT_TEMP
+   42          | TEMP ASSIGN . HASH NUM OPERATOR NUM
+   43          | TEMP ASSIGN . HASH NUM OPERATOR TEMP
+   44          | TEMP ASSIGN . HASH NUM OPERATOR HASH NUM
+   45          | TEMP ASSIGN . INT_VAR OPERATOR NUM
+   46          | TEMP ASSIGN . INT_VAR OPERATOR INT_VAR
+   48          | TEMP ASSIGN . INT_VAR OPERATOR TEMP
+   49          | TEMP ASSIGN . TEMP OPERATOR NUM
+   50          | TEMP ASSIGN . TEMP OPERATOR INT_VAR
+   51          | TEMP ASSIGN . TEMP OPERATOR TEMP
+   53          | TEMP ASSIGN . NUM OPERATOR NUM
+   54          | TEMP ASSIGN . NUM OPERATOR INT_VAR
+   55          | TEMP ASSIGN . NUM OPERATOR TEMP
+   67          | TEMP ASSIGN . ADDR LB INT_VAR RB
+   69          | TEMP ASSIGN . TEMP SQL TEMP SQR
+
+    TEMP        shift, and go to state 44
+    INT_VAR     shift, and go to state 45
+    NUM         shift, and go to state 46
+    HASH        shift, and go to state 47
+    ADDR        shift, and go to state 48
+    FLOAT_VAR   shift, and go to state 49
+    FLOAT_TEMP  shift, and go to state 50
+
+
+State 31
+
+   68 statement: TEMP SQL . TEMP SQR ASSIGN TEMP
+
+    TEMP  shift, and go to state 51
+
+
+State 32
+
+    6 statement: INT_VAR ASSIGN . NUM
+    7          | INT_VAR ASSIGN . INT_VAR
+    8          | INT_VAR ASSIGN . HASH NUM
+   19          | INT_VAR ASSIGN . TEMP
+
+    TEMP     shift, and go to state 52
+    INT_VAR  shift, and go to state 53
+    NUM      shift, and go to state 54
+    HASH     shift, and go to state 55
+
+
+State 33
+
+    3 statement: NUM COLON .
+
+    $default  reduce using rule 3 (statement)
+
+
+State 34
+
+   38 statement: IF TEMP . COMPARE NUM GOTO NUM
+   39          | IF TEMP . COMPARE TEMP GOTO NUM
+
+    COMPARE  shift, and go to state 56
+
+
+State 35
+
+   40 statement: IF INT_VAR . COMPARE NUM GOTO NUM
+
+    COMPARE  shift, and go to state 57
+
+
+State 36
+
+   41 statement: IF FLOAT_TEMP . COMPARE FLOAT_TEMP GOTO NUM
+
+    COMPARE  shift, and go to state 58
+
+
+State 37
+
+   11 statement: HASH NUM . ASSIGN NUM
+   12          | HASH NUM . ASSIGN FLOAT_NUM
+   13          | HASH NUM . ASSIGN TEMP
+   14          | HASH NUM . ASSIGN FLOAT_TEMP
+   15          | HASH NUM . ASSIGN INT_VAR
+   16          | HASH NUM . ASSIGN FLOAT_VAR
+
+    ASSIGN  shift, and go to state 59
+
+
+State 38
+
+   10 statement: FLOAT_VAR ASSIGN . FLOAT_NUM
+   20          | FLOAT_VAR ASSIGN . FLOAT_TEMP
+
+    FLOAT_TEMP  shift, and go to state 60
+    FLOAT_NUM   shift, and go to state 61
+
+
+State 39
+
+   18 statement: FLOAT_TEMP ASSIGN . FLOAT_VAR
+   22          | FLOAT_TEMP ASSIGN . FLOAT_TEMP
+   24          | FLOAT_TEMP ASSIGN . FLOAT_NUM
+   47          | FLOAT_TEMP ASSIGN . FLOAT_VAR OPERATOR FLOAT_VAR
+   52          | FLOAT_TEMP ASSIGN . FLOAT_TEMP OPERATOR FLOAT_TEMP
+
+    FLOAT_VAR   shift, and go to state 62
+    FLOAT_TEMP  shift, and go to state 63
+    FLOAT_NUM   shift, and go to state 64
+
+
+State 40
+
+    0 $accept: statements $end .
+
+    $default  accept
+
+
+State 41
+
+    1 statements: statements NEWLINE . statement
+
+    FUNC        shift, and go to state 1
+    GOTO        shift, and go to state 2
+    RETURN      shift, and go to state 3
+    PARAM       shift, and go to state 4
+    REFPARAM    shift, and go to state 5
+    CALL        shift, and go to state 6
+    TEMP        shift, and go to state 7
+    INT_VAR     shift, and go to state 8
+    NUM         shift, and go to state 9
+    IF          shift, and go to state 10
+    HASH        shift, and go to state 11
+    ARRAY_DECL  shift, and go to state 12
+    FLOAT_VAR   shift, and go to state 13
+    FLOAT_TEMP  shift, and go to state 14
+
+    statement  go to state 65
+
+
+State 42
+
+    4 statement: FUNC BEGI FUNC_NAME .
+
+    $default  reduce using rule 4 (statement)
+
+
+State 43
+
+   61 statement: CALL FUNC_NAME COMMA . NUM
+
+    NUM  shift, and go to state 66
+
+
+State 44
+
+   21 statement: TEMP ASSIGN TEMP .
+   32          | TEMP ASSIGN TEMP . COMPARE NUM
+   36          | TEMP ASSIGN TEMP . COMPARE TEMP
+   49          | TEMP ASSIGN TEMP . OPERATOR NUM
+   50          | TEMP ASSIGN TEMP . OPERATOR INT_VAR
+   51          | TEMP ASSIGN TEMP . OPERATOR TEMP
+   69          | TEMP ASSIGN TEMP . SQL TEMP SQR
+
+    COMPARE   shift, and go to state 67
+    OPERATOR  shift, and go to state 68
+    SQL       shift, and go to state 69
+
+    $default  reduce using rule 21 (statement)
+
+
+State 45
+
+   17 statement: TEMP ASSIGN INT_VAR .
+   26          | TEMP ASSIGN INT_VAR . COMPARE NUM
+   34          | TEMP ASSIGN INT_VAR . COMPARE TEMP
+   45          | TEMP ASSIGN INT_VAR . OPERATOR NUM
+   46          | TEMP ASSIGN INT_VAR . OPERATOR INT_VAR
+   48          | TEMP ASSIGN INT_VAR . OPERATOR TEMP
+
+    COMPARE   shift, and go to state 70
+    OPERATOR  shift, and go to state 71
+
+    $default  reduce using rule 17 (statement)
+
+
+State 46
+
+   23 statement: TEMP ASSIGN NUM .
+   53          | TEMP ASSIGN NUM . OPERATOR NUM
+   54          | TEMP ASSIGN NUM . OPERATOR INT_VAR
+   55          | TEMP ASSIGN NUM . OPERATOR TEMP
+
+    OPERATOR  shift, and go to state 72
+
+    $default  reduce using rule 23 (statement)
+
+
+State 47
+
+    9 statement: TEMP ASSIGN HASH . NUM
+   28          | TEMP ASSIGN HASH . NUM COMPARE NUM
+   29          | TEMP ASSIGN HASH . NUM COMPARE FLOAT_NUM
+   30          | TEMP ASSIGN HASH . NUM COMPARE TEMP
+   31          | TEMP ASSIGN HASH . NUM COMPARE FLOAT_TEMP
+   42          | TEMP ASSIGN HASH . NUM OPERATOR NUM
+   43          | TEMP ASSIGN HASH . NUM OPERATOR TEMP
+   44          | TEMP ASSIGN HASH . NUM OPERATOR HASH NUM
+
+    NUM  shift, and go to state 73
+
+
+State 48
+
+   67 statement: TEMP ASSIGN ADDR . LB INT_VAR RB
+
+    LB  shift, and go to state 74
+
+
+State 49
+
+   27 statement: TEMP ASSIGN FLOAT_VAR . COMPARE FLOAT_NUM
+   35          | TEMP ASSIGN FLOAT_VAR . COMPARE FLOAT_TEMP
+
+    COMPARE  shift, and go to state 75
+
+
+State 50
+
+   33 statement: TEMP ASSIGN FLOAT_TEMP . COMPARE FLOAT_NUM
+   37          | TEMP ASSIGN FLOAT_TEMP . COMPARE FLOAT_TEMP
+
+    COMPARE  shift, and go to state 76
+
+
+State 51
+
+   68 statement: TEMP SQL TEMP . SQR ASSIGN TEMP
+
+    SQR  shift, and go to state 77
+
+
+State 52
+
+   19 statement: INT_VAR ASSIGN TEMP .
+
+    $default  reduce using rule 19 (statement)
+
+
+State 53
+
+    7 statement: INT_VAR ASSIGN INT_VAR .
+
+    $default  reduce using rule 7 (statement)
+
+
+State 54
+
+    6 statement: INT_VAR ASSIGN NUM .
+
+    $default  reduce using rule 6 (statement)
+
+
+State 55
+
+    8 statement: INT_VAR ASSIGN HASH . NUM
+
+    NUM  shift, and go to state 78
+
+
+State 56
+
+   38 statement: IF TEMP COMPARE . NUM GOTO NUM
+   39          | IF TEMP COMPARE . TEMP GOTO NUM
+
+    TEMP  shift, and go to state 79
+    NUM   shift, and go to state 80
+
+
+State 57
+
+   40 statement: IF INT_VAR COMPARE . NUM GOTO NUM
+
+    NUM  shift, and go to state 81
+
+
+State 58
+
+   41 statement: IF FLOAT_TEMP COMPARE . FLOAT_TEMP GOTO NUM
+
+    FLOAT_TEMP  shift, and go to state 82
+
+
+State 59
+
+   11 statement: HASH NUM ASSIGN . NUM
+   12          | HASH NUM ASSIGN . FLOAT_NUM
+   13          | HASH NUM ASSIGN . TEMP
+   14          | HASH NUM ASSIGN . FLOAT_TEMP
+   15          | HASH NUM ASSIGN . INT_VAR
+   16          | HASH NUM ASSIGN . FLOAT_VAR
+
+    TEMP        shift, and go to state 83
+    INT_VAR     shift, and go to state 84
+    NUM         shift, and go to state 85
+    FLOAT_VAR   shift, and go to state 86
+    FLOAT_TEMP  shift, and go to state 87
+    FLOAT_NUM   shift, and go to state 88
+
+
+State 60
+
+   20 statement: FLOAT_VAR ASSIGN FLOAT_TEMP .
+
+    $default  reduce using rule 20 (statement)
+
+
+State 61
+
+   10 statement: FLOAT_VAR ASSIGN FLOAT_NUM .
+
+    $default  reduce using rule 10 (statement)
+
+
+State 62
+
+   18 statement: FLOAT_TEMP ASSIGN FLOAT_VAR .
+   47          | FLOAT_TEMP ASSIGN FLOAT_VAR . OPERATOR FLOAT_VAR
+
+    OPERATOR  shift, and go to state 89
+
+    $default  reduce using rule 18 (statement)
+
+
+State 63
+
+   22 statement: FLOAT_TEMP ASSIGN FLOAT_TEMP .
+   52          | FLOAT_TEMP ASSIGN FLOAT_TEMP . OPERATOR FLOAT_TEMP
+
+    OPERATOR  shift, and go to state 90
+
+    $default  reduce using rule 22 (statement)
+
+
+State 64
+
+   24 statement: FLOAT_TEMP ASSIGN FLOAT_NUM .
+
+    $default  reduce using rule 24 (statement)
+
+
+State 65
+
+    1 statements: statements NEWLINE statement .
+
+    $default  reduce using rule 1 (statements)
+
+
+State 66
+
+   61 statement: CALL FUNC_NAME COMMA NUM .
+
+    $default  reduce using rule 61 (statement)
+
+
+State 67
+
+   32 statement: TEMP ASSIGN TEMP COMPARE . NUM
+   36          | TEMP ASSIGN TEMP COMPARE . TEMP
+
+    TEMP  shift, and go to state 91
+    NUM   shift, and go to state 92
+
+
+State 68
+
+   49 statement: TEMP ASSIGN TEMP OPERATOR . NUM
+   50          | TEMP ASSIGN TEMP OPERATOR . INT_VAR
+   51          | TEMP ASSIGN TEMP OPERATOR . TEMP
+
+    TEMP     shift, and go to state 93
+    INT_VAR  shift, and go to state 94
+    NUM      shift, and go to state 95
+
+
+State 69
+
+   69 statement: TEMP ASSIGN TEMP SQL . TEMP SQR
+
+    TEMP  shift, and go to state 96
+
+
+State 70
+
+   26 statement: TEMP ASSIGN INT_VAR COMPARE . NUM
+   34          | TEMP ASSIGN INT_VAR COMPARE . TEMP
+
+    TEMP  shift, and go to state 97
+    NUM   shift, and go to state 98
+
+
+State 71
+
+   45 statement: TEMP ASSIGN INT_VAR OPERATOR . NUM
+   46          | TEMP ASSIGN INT_VAR OPERATOR . INT_VAR
+   48          | TEMP ASSIGN INT_VAR OPERATOR . TEMP
+
+    TEMP     shift, and go to state 99
+    INT_VAR  shift, and go to state 100
+    NUM      shift, and go to state 101
+
+
+State 72
+
+   53 statement: TEMP ASSIGN NUM OPERATOR . NUM
+   54          | TEMP ASSIGN NUM OPERATOR . INT_VAR
+   55          | TEMP ASSIGN NUM OPERATOR . TEMP
+
+    TEMP     shift, and go to state 102
+    INT_VAR  shift, and go to state 103
+    NUM      shift, and go to state 104
+
+
+State 73
+
+    9 statement: TEMP ASSIGN HASH NUM .
+   28          | TEMP ASSIGN HASH NUM . COMPARE NUM
+   29          | TEMP ASSIGN HASH NUM . COMPARE FLOAT_NUM
+   30          | TEMP ASSIGN HASH NUM . COMPARE TEMP
+   31          | TEMP ASSIGN HASH NUM . COMPARE FLOAT_TEMP
+   42          | TEMP ASSIGN HASH NUM . OPERATOR NUM
+   43          | TEMP ASSIGN HASH NUM . OPERATOR TEMP
+   44          | TEMP ASSIGN HASH NUM . OPERATOR HASH NUM
+
+    COMPARE   shift, and go to state 105
+    OPERATOR  shift, and go to state 106
+
+    $default  reduce using rule 9 (statement)
+
+
+State 74
+
+   67 statement: TEMP ASSIGN ADDR LB . INT_VAR RB
+
+    INT_VAR  shift, and go to state 107
+
+
+State 75
+
+   27 statement: TEMP ASSIGN FLOAT_VAR COMPARE . FLOAT_NUM
+   35          | TEMP ASSIGN FLOAT_VAR COMPARE . FLOAT_TEMP
+
+    FLOAT_TEMP  shift, and go to state 108
+    FLOAT_NUM   shift, and go to state 109
+
+
+State 76
+
+   33 statement: TEMP ASSIGN FLOAT_TEMP COMPARE . FLOAT_NUM
+   37          | TEMP ASSIGN FLOAT_TEMP COMPARE . FLOAT_TEMP
+
+    FLOAT_TEMP  shift, and go to state 110
+    FLOAT_NUM   shift, and go to state 111
+
+
+State 77
+
+   68 statement: TEMP SQL TEMP SQR . ASSIGN TEMP
+
+    ASSIGN  shift, and go to state 112
+
+
+State 78
+
+    8 statement: INT_VAR ASSIGN HASH NUM .
+
+    $default  reduce using rule 8 (statement)
+
+
+State 79
+
+   39 statement: IF TEMP COMPARE TEMP . GOTO NUM
+
+    GOTO  shift, and go to state 113
+
+
+State 80
+
+   38 statement: IF TEMP COMPARE NUM . GOTO NUM
+
+    GOTO  shift, and go to state 114
+
+
+State 81
+
+   40 statement: IF INT_VAR COMPARE NUM . GOTO NUM
+
+    GOTO  shift, and go to state 115
+
+
+State 82
+
+   41 statement: IF FLOAT_TEMP COMPARE FLOAT_TEMP . GOTO NUM
+
+    GOTO  shift, and go to state 116
+
+
+State 83
+
+   13 statement: HASH NUM ASSIGN TEMP .
+
+    $default  reduce using rule 13 (statement)
+
+
+State 84
+
+   15 statement: HASH NUM ASSIGN INT_VAR .
+
+    $default  reduce using rule 15 (statement)
+
+
+State 85
+
+   11 statement: HASH NUM ASSIGN NUM .
+
+    $default  reduce using rule 11 (statement)
+
+
+State 86
+
+   16 statement: HASH NUM ASSIGN FLOAT_VAR .
+
+    $default  reduce using rule 16 (statement)
+
+
+State 87
+
+   14 statement: HASH NUM ASSIGN FLOAT_TEMP .
+
+    $default  reduce using rule 14 (statement)
+
+
+State 88
+
+   12 statement: HASH NUM ASSIGN FLOAT_NUM .
+
+    $default  reduce using rule 12 (statement)
+
+
+State 89
+
+   47 statement: FLOAT_TEMP ASSIGN FLOAT_VAR OPERATOR . FLOAT_VAR
+
+    FLOAT_VAR  shift, and go to state 117
+
+
+State 90
+
+   52 statement: FLOAT_TEMP ASSIGN FLOAT_TEMP OPERATOR . FLOAT_TEMP
+
+    FLOAT_TEMP  shift, and go to state 118
+
+
+State 91
+
+   36 statement: TEMP ASSIGN TEMP COMPARE TEMP .
+
+    $default  reduce using rule 36 (statement)
+
+
+State 92
+
+   32 statement: TEMP ASSIGN TEMP COMPARE NUM .
+
+    $default  reduce using rule 32 (statement)
+
+
+State 93
+
+   51 statement: TEMP ASSIGN TEMP OPERATOR TEMP .
+
+    $default  reduce using rule 51 (statement)
+
+
+State 94
+
+   50 statement: TEMP ASSIGN TEMP OPERATOR INT_VAR .
+
+    $default  reduce using rule 50 (statement)
+
+
+State 95
+
+   49 statement: TEMP ASSIGN TEMP OPERATOR NUM .
+
+    $default  reduce using rule 49 (statement)
+
+
+State 96
+
+   69 statement: TEMP ASSIGN TEMP SQL TEMP . SQR
+
+    SQR  shift, and go to state 119
+
+
+State 97
+
+   34 statement: TEMP ASSIGN INT_VAR COMPARE TEMP .
+
+    $default  reduce using rule 34 (statement)
+
+
+State 98
+
+   26 statement: TEMP ASSIGN INT_VAR COMPARE NUM .
+
+    $default  reduce using rule 26 (statement)
+
+
+State 99
+
+   48 statement: TEMP ASSIGN INT_VAR OPERATOR TEMP .
+
+    $default  reduce using rule 48 (statement)
+
+
+State 100
+
+   46 statement: TEMP ASSIGN INT_VAR OPERATOR INT_VAR .
+
+    $default  reduce using rule 46 (statement)
+
+
+State 101
+
+   45 statement: TEMP ASSIGN INT_VAR OPERATOR NUM .
+
+    $default  reduce using rule 45 (statement)
+
+
+State 102
+
+   55 statement: TEMP ASSIGN NUM OPERATOR TEMP .
+
+    $default  reduce using rule 55 (statement)
+
+
+State 103
+
+   54 statement: TEMP ASSIGN NUM OPERATOR INT_VAR .
+
+    $default  reduce using rule 54 (statement)
+
+
+State 104
+
+   53 statement: TEMP ASSIGN NUM OPERATOR NUM .
+
+    $default  reduce using rule 53 (statement)
+
+
+State 105
+
+   28 statement: TEMP ASSIGN HASH NUM COMPARE . NUM
+   29          | TEMP ASSIGN HASH NUM COMPARE . FLOAT_NUM
+   30          | TEMP ASSIGN HASH NUM COMPARE . TEMP
+   31          | TEMP ASSIGN HASH NUM COMPARE . FLOAT_TEMP
+
+    TEMP        shift, and go to state 120
+    NUM         shift, and go to state 121
+    FLOAT_TEMP  shift, and go to state 122
+    FLOAT_NUM   shift, and go to state 123
+
+
+State 106
+
+   42 statement: TEMP ASSIGN HASH NUM OPERATOR . NUM
+   43          | TEMP ASSIGN HASH NUM OPERATOR . TEMP
+   44          | TEMP ASSIGN HASH NUM OPERATOR . HASH NUM
+
+    TEMP  shift, and go to state 124
+    NUM   shift, and go to state 125
+    HASH  shift, and go to state 126
+
+
+State 107
+
+   67 statement: TEMP ASSIGN ADDR LB INT_VAR . RB
+
+    RB  shift, and go to state 127
+
+
+State 108
+
+   35 statement: TEMP ASSIGN FLOAT_VAR COMPARE FLOAT_TEMP .
+
+    $default  reduce using rule 35 (statement)
+
+
+State 109
+
+   27 statement: TEMP ASSIGN FLOAT_VAR COMPARE FLOAT_NUM .
+
+    $default  reduce using rule 27 (statement)
+
+
+State 110
+
+   37 statement: TEMP ASSIGN FLOAT_TEMP COMPARE FLOAT_TEMP .
+
+    $default  reduce using rule 37 (statement)
+
+
+State 111
+
+   33 statement: TEMP ASSIGN FLOAT_TEMP COMPARE FLOAT_NUM .
+
+    $default  reduce using rule 33 (statement)
+
+
+State 112
+
+   68 statement: TEMP SQL TEMP SQR ASSIGN . TEMP
+
+    TEMP  shift, and go to state 128
+
+
+State 113
+
+   39 statement: IF TEMP COMPARE TEMP GOTO . NUM
+
+    NUM  shift, and go to state 129
+
+
+State 114
+
+   38 statement: IF TEMP COMPARE NUM GOTO . NUM
+
+    NUM  shift, and go to state 130
+
+
+State 115
+
+   40 statement: IF INT_VAR COMPARE NUM GOTO . NUM
+
+    NUM  shift, and go to state 131
+
+
+State 116
+
+   41 statement: IF FLOAT_TEMP COMPARE FLOAT_TEMP GOTO . NUM
+
+    NUM  shift, and go to state 132
+
+
+State 117
+
+   47 statement: FLOAT_TEMP ASSIGN FLOAT_VAR OPERATOR FLOAT_VAR .
+
+    $default  reduce using rule 47 (statement)
+
+
+State 118
+
+   52 statement: FLOAT_TEMP ASSIGN FLOAT_TEMP OPERATOR FLOAT_TEMP .
+
+    $default  reduce using rule 52 (statement)
+
+
+State 119
+
+   69 statement: TEMP ASSIGN TEMP SQL TEMP SQR .
+
+    $default  reduce using rule 69 (statement)
+
+
+State 120
+
+   30 statement: TEMP ASSIGN HASH NUM COMPARE TEMP .
+
+    $default  reduce using rule 30 (statement)
+
+
+State 121
+
+   28 statement: TEMP ASSIGN HASH NUM COMPARE NUM .
+
+    $default  reduce using rule 28 (statement)
+
+
+State 122
+
+   31 statement: TEMP ASSIGN HASH NUM COMPARE FLOAT_TEMP .
+
+    $default  reduce using rule 31 (statement)
+
+
+State 123
+
+   29 statement: TEMP ASSIGN HASH NUM COMPARE FLOAT_NUM .
+
+    $default  reduce using rule 29 (statement)
+
+
+State 124
+
+   43 statement: TEMP ASSIGN HASH NUM OPERATOR TEMP .
+
+    $default  reduce using rule 43 (statement)
+
+
+State 125
+
+   42 statement: TEMP ASSIGN HASH NUM OPERATOR NUM .
+
+    $default  reduce using rule 42 (statement)
+
+
+State 126
+
+   44 statement: TEMP ASSIGN HASH NUM OPERATOR HASH . NUM
+
+    NUM  shift, and go to state 133
+
+
+State 127
+
+   67 statement: TEMP ASSIGN ADDR LB INT_VAR RB .
+
+    $default  reduce using rule 67 (statement)
+
+
+State 128
+
+   68 statement: TEMP SQL TEMP SQR ASSIGN TEMP .
+
+    $default  reduce using rule 68 (statement)
+
+
+State 129
+
+   39 statement: IF TEMP COMPARE TEMP GOTO NUM .
+
+    $default  reduce using rule 39 (statement)
+
+
+State 130
+
+   38 statement: IF TEMP COMPARE NUM GOTO NUM .
+
+    $default  reduce using rule 38 (statement)
+
+
+State 131
+
+   40 statement: IF INT_VAR COMPARE NUM GOTO NUM .
+
+    $default  reduce using rule 40 (statement)
+
+
+State 132
+
+   41 statement: IF FLOAT_TEMP COMPARE FLOAT_TEMP GOTO NUM .
+
+    $default  reduce using rule 41 (statement)
+
+
+State 133
+
+   44 statement: TEMP ASSIGN HASH NUM OPERATOR HASH NUM .
+
+    $default  reduce using rule 44 (statement)
