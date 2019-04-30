@@ -295,16 +295,6 @@ statement		:	d
 					error SEMI
 					{
 						$$ = new Node("statement","");$$->children.push_back($2);
-					}
-					|
-					error NEWLINE
-					{
-						$$ = new Node("statement","");$$->children.push_back($2);
-					}
-					|
-					error RB
-					{
-						$$ = new Node("statement","");$$->children.push_back($2);
 					};
 switchexp		:	SWITCH LP expression RP
 					{
@@ -1563,9 +1553,9 @@ int main(){
 		out_sym<<symtab.print();
 		out_sym<<"0 0 "<<bytes_g;
 		out_sym.close();
-		cout<<"Global Memory: "<<bytes_g<<endl;
-		cout<<int_pool<<endl;
-		cout<<float_pool<<endl;	
+		// cout<<"Global Memory: "<<bytes_g<<endl;
+		// cout<<int_pool<<endl;
+		// cout<<float_pool<<endl;	
 		// SymtabReader();
 	}
 	tree_file.open("tree.txt",fstream::out);

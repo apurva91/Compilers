@@ -16,7 +16,7 @@ int fib(int x){
 	return b;
 }
 int main(){
-	int y,r
+	int y,r;
 	y = 4;
 	r = fib(y);
 }
