@@ -1546,12 +1546,16 @@ int main(){
 		ic.str(backpatch_quad(ic.str()));
 		ic.str(backpatch_force(ic.str()));
 		ofstream out("inter.txt");
+		string st = ic.str();
+		ic.str(string(st.begin(), st.begin() + st.size()-1));
 		out<<ic.str();
 		out.close();
 		cout<<ic.str();
 		ofstream out_sym("symtab.txt");
-		out_sym<<symtab.print();
-		out_sym<<"0 0 "<<bytes_g;
+		st = symtab.print();
+		out_sym<<string(st.begin(), st.begin() + st.size()-1);
+		// out_sym<<symtab.print();
+		// out_sym<<"0 0 "<<bytes_g;
 		out_sym.close();
 		// cout<<"Global Memory: "<<bytes_g<<endl;
 		// cout<<int_pool<<endl;

@@ -199,7 +199,7 @@ struct SymbolTable{
 		xyz.str("");
 		for(auto it=functions.begin(); it!= functions.end(); it++){
 			Function * fn = it->second;
-			xyz<<fn->id<<" "<<fn->num_param<<" "<<fn->size<<endl;
+			xyz<<fn->id<<" "<<fn->num_param+1<<" "<<fn->size<<endl;
 		}
 		return xyz.str();
 
