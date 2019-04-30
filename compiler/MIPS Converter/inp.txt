@@ -46,21 +46,12 @@ it2[it3] = it4
 goto 25
 goto 13
 42: 
-it2 = 1
-it3 = 2
+it2 = 6
+it3 = 6
 it4 = addr(i.ar.2.main)
 it5 = it2 * 7
 it5 = it5 + it3
 it5 = it5 * 4
 it6 = it4[it5]
 i.c.2.main = it6
-it9 = it6
-it4 = 6
-it5 = 6
-it6 = addr(i.ar.2.main)
-it7 = it4 * 7
-it7 = it7 + it5
-it7 = it7 * 4
-it8 = it6[it7]
-i.c.2.main = it8
 func end
