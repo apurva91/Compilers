@@ -1386,7 +1386,7 @@ int main()
 	fp=fopen("mips.asm","w");
 	fprintf(fp, ".text\n");
 	
-	ifstream infile("size.txt");
+	ifstream infile("symtab.txt");
 	string a;
 	int b,c;
 	while (infile >> a >> b >>c)

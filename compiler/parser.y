@@ -32,8 +32,8 @@
 	int bytes = 0;
 	int bytes_g = 0; 
 	stringstream xyz;
-	vector < pair < string , int > > int_pool = {make_pair("it0",1),make_pair("it1",1),make_pair("it2",1),make_pair("it3",1),make_pair("it4",1),make_pair("it5",1),make_pair("it6",1),make_pair("it7",1),make_pair("it8",1),make_pair("it9",1)};
-	vector < pair < string , int > > float_pool = {make_pair("f0",1),make_pair("f1",1),make_pair("f2",1),make_pair("f3",1),make_pair("f4",1),make_pair("f5",1),make_pair("f6",1),make_pair("f7",1),make_pair("f8",1),make_pair("f9",1)};
+	vector < pair < string , bool > > int_pool = {make_pair("it0",true),make_pair("it1",true),make_pair("it2",true),make_pair("it3",true),make_pair("it4",true),make_pair("it5",true),make_pair("it6",true),make_pair("it7",true),make_pair("it8",true),make_pair("it9",true)};
+	vector < pair < string , bool > > float_pool = {make_pair("f0",true),make_pair("f1",true),make_pair("f2",true),make_pair("f3",true),make_pair("f4",true),make_pair("f5",true),make_pair("f6",true),make_pair("f7",true),make_pair("f8",true),make_pair("f9",true)};
 	int int_pool_curr = -1;
 	int float_pool_curr = -1;
 %}
@@ -117,7 +117,6 @@ statement		:	d
 						if($1->var.rfind("_term",0)==0){
 							yyerror("Invalid syntax, just a term mentioned");
 						}
-						cout<<">>>"<<$1->var<<endl;
 						itv($1->var);
 					}
 					|
@@ -922,10 +921,6 @@ id_arr_asg			: 	IDENTIFIER
 									ic<<gicv()<<" = "<<gicv()<<" + "<<dimlist[i]<<endl;
 									tv = gicv();
 								}
-								for(int i=0; i<ptr->dimlist.size(); i++){
-									cout<<dimlist[i]<<endl;
-									// itv(dimlist[i]);
-								}
 								int size = 4;
 								if(ptr->eletype==_real) size = 4;
 								
@@ -1021,7 +1016,8 @@ rel_exp 		:	rel_exp op3 sim_exp
 								Type tt = get_type($1->data_type, $3->data_type);
 								if(tt == _integer || tt == _real){
 									if($1->data_type==$3->data_type){
-
+										itv($1->var);
+										itv($3->var);
 										if($1->data_type==_real){
 											$$->var = gfv();
 										}
@@ -1048,8 +1044,6 @@ rel_exp 		:	rel_exp op3 sim_exp
 									$$->falselist.push_back(count(s.begin(),s.end(),'\n'));
 									ic<<"if "<<$$->var<<" <= 0 goto "<<endl;
 									itv($$->var);
-																			itv($1->var);
-										itv($3->var);
 									s = ic.str();
 									$$->truelist.push_back(count(s.begin(),s.end(),'\n'));
 									ic<<"goto "<<endl;
@@ -1104,8 +1098,6 @@ sim_exp 		:	sim_exp op1 dm_exp
 										ic<<tv<<" = "<<$1->var<<" "<<$2->value<<" "<<tv<<endl;
 									}
 								}
-																		itv($1->var);
-										itv($3->var);
 							}
 							else{
 								yyerror("Mismatch in datatype while operation " + $$->value);
@@ -1161,8 +1153,6 @@ dm_exp 			: 	dm_exp op2 un_exp
 										ic<<tv<<" = "<<$1->var<<" "<<$2->value<<" "<<tv<<endl;
 									}
 								}
-																		itv($1->var);
-										itv($3->var);
 							}
 							else{
 								yyerror("Mismatch in datatype while operation " + $$->value);
@@ -1199,7 +1189,7 @@ un_exp 			: 	unop term
 							$$->var = giv();
 							ic<<giv()<<" = 0"<<endl;
 							ic<<$$->var<<" = " + gicv() + " "<<$1->value<<" "<<$2->var<<endl;
-							itv(gicv());	
+							itv(gicv());
 						}
 						// ic<<$2->var<<" = "<<$$->var<<endl;;
 						// $$->var = $2->var;
@@ -1568,8 +1558,8 @@ int main(){
 		// out_sym<<"0 0 "<<bytes_g;
 		out_sym.close();
 		// cout<<"Global Memory: "<<bytes_g<<endl;
-		cout<<int_pool<<endl;
-		cout<<float_pool<<endl;	
+		// cout<<int_pool<<endl;
+		// cout<<float_pool<<endl;	
 		// SymtabReader();
 	}
 	tree_file.open("tree.txt",fstream::out);

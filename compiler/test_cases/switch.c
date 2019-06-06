@@ -1,27 +1,18 @@
 int main(){
 	int x; 
-	x = 3;
+	x = 4;
 	int ans;
 	ans = 4;
 	switch(x){
 		case 1:{
-			int i;
-			for(i=0;i<1;i=i+1){
-				ans = ans + i;
-			}
+			ans=ans+1;
 		}
 		case 2:{
-			int i;
-			for(i=0;i<2;i=i+1){
-				ans = ans + i;
-			}
+			ans=ans+1;
 			break;
 		}
 		case 3:{
-			int i;
-			for(i=0;i<3;i=i+1){
-				ans = ans + i;
-			}
+			ans=ans+1;
 			break;
 		}
 		default:{

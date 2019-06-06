@@ -17,6 +17,6 @@ int fib(int x){
 }
 int main(){
 	int y,r;
-	y = 4;
+	y = 5;
 	r = fib(y);
 }
