@@ -4,8 +4,7 @@
 
 Copy your intermediate code in inp.txt
 ``` 
-bison -d -v comp.y; flex comp.l; g++  lex.yy.c comp.tab.c; 
-./a.out < inp.txt
+bison -d -v comp.y; flex comp.l; g++  lex.yy.c comp.tab.c;  ./a.out < inp.txt
 ```
 
 ### Type of Statements in intermediate Language

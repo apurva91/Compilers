@@ -62,11 +62,17 @@ void itv(string s){
 	string p = s;
 	ReplaceStringInPlace(p,"_term","");
 	if(p[1]=='t'||p[1]=='i'){
+	cout<<p<<endl;
 		riv(p);
 	}
 	if(p[0]=='f'&&isdigit(p[1])){
 		rfv(p);
 	}
+	if(p.back()==']'){		
+		itv(split(p,"[")[0]);
+		itv(split(split(p,"[")[1],"]")[0]);
+	}
+
 }
 
 bool itcv(string s){
@@ -83,7 +89,9 @@ bool itcv(string s){
 
 void riv(string name){
 	for(int i=0; i<int_pool.size(); i++){
-		if(!int_pool[i].second&&int_pool[i].first==name){
+		// cout<<name<<"''"<<endl;
+		if(int_pool[i].second == false && int_pool[i].first==name){
+		cout<<int_pool<<endl;
 			int_pool[i].second = true;
 			int_pool_curr = -1;
 		}
